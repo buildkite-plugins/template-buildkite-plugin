@@ -53,3 +53,10 @@ function prefix_read_list_into_result() {
 function plugin_read_list_into_result() {
   prefix_read_list_into_result "BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
 }
+
+# Reads a single value
+function plugin_read_config() {
+  local var="BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
+  local default="${2:-}"
+  echo "${!var:-$default}"
+}
