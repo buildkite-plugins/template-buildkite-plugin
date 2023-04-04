@@ -1,4 +1,4 @@
-# Template Buildkite Plugin
+# Template Buildkite Plugin [![Build status](https://badge.buildkite.com/d673030645c7f3e7e397affddd97cfe9f93a40547ed17b6dc5.svg)](https://buildkite.com/buildkite/plugins-template)
 
 A Buildkite plugin for something awesome
 
