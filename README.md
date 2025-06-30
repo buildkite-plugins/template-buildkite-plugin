@@ -55,14 +55,6 @@ steps:
 - ⚠️ Partially supported (some combinations cause errors/issues)
 - ❌ Not supported
 
-## ⚒ Developing
-
-You can use the [bk cli](https://github.com/buildkite/cli) to run the [pipeline](.buildkite/pipeline.yml) locally:
-
-```bash
-bk local run
-```
-
 ## 👩‍💻 Contributing
 
 Your policy on how to contribute to the plugin!
