@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PLUGIN_PREFIX="YOUR_PLUGIN_NAME"
+PLUGIN_PREFIX="CHATGPT_PROMPTER"
 
 # Reads either a value or a list from the given env prefix
 function prefix_read_list() {
@@ -59,4 +59,102 @@ function plugin_read_config() {
   local var="BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
   local default="${2:-}"
   echo "${!var:-$default}"
+}
+
+function send_prompt() {
+  local user_prompt="$1"
+  local system_prompt="$2"
+  local model="$3"
+
+  local prompt_payload
+  #check if user_prompt is equal to "ping"
+  if [ "${user_prompt}" == "ping" ]; then
+    echo "Pinging ChatGPT with model: ${model}"
+    prompt_payload=$(ping_payload "${model}")
+  else
+    prompt_payload=$(format_payload "${model}" "${user_prompt}" "${system_prompt}")
+  fi
+  # Call the OpenAI API
+  response=$(call_openapi_chatgpt "${prompt_payload}")
+  echo "Response from ChatGPT:"
+  echo "${response}" | jq -r '.choices[0].message.content // "No response"'
+  if [ $? -ne 0 ]; then
+    echo "❌ Error: Failed to parse response from OpenAI API."
+    return 1
+  fi
+  echo "✅ Successfully sent prompt to ChatGPT."
+  return 0
+}
+
+function ping_payload() { 
+  local model="$1" 
+
+  echo "Pinging ChatGPT with model: ${model}"
+  
+  # Prepare the payload
+  local payload=$(jq -n \
+    --arg model "$model" \
+    '{
+      model: $model,
+      messages: [
+        { role: "user", content: "ping" }, 
+      ],
+      max_tokens: 1,
+      temperature: 0.0,
+    }')
+
+  echo "$payload"
+}
+
+function call_openapi_chatgpt() { 
+  local payload="$1"
+
+  # Set the OpenAI API Key from the Buildkite secret
+  openai_api_key=$(buildkite-agent secret get "$API_SECRET_KEY")
+  if [ -z "${openai_api_key}" ]; then
+    echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$API_SECRET_KEY'."
+    return 1
+  fi 
+
+  # Call the OpenAI API
+  response=$(curl -sS -X POST "https://api.openai.com/v1/chat/completions" \
+    -H "Authorization: Bearer ${openai_api_key}" \
+    -H "Content-Type: application/json" \
+    -d "${payload}")
+
+  echo "$response" 
+}
+
+function format_payload() {
+  local model="$1"
+  local user_prompt="$2"
+  local system_prompt="$3"
+
+  local payload
+  if [ -z "${system_prompt}" ]; then
+      # Prepare the payload without system prompt
+      payload=$(jq -n \
+        --arg model "$model" \
+        --arg user_prompt "$user_prompt" \
+        '{
+          model: $model,
+          messages: [
+            { role: "user", content: $user_prompt }
+          ] 
+        }')
+    else
+      # Prepare the payload with system prompt
+      payload=$(jq -n \
+        --arg model "$model" \
+        --arg user_prompt "$user_prompt" \
+        --arg system_prompt "$system_prompt" \
+        '{
+          model: $model,
+          messages: [
+            { role: "system", content: $system_prompt },
+            { role: "user", content: $user_prompt }
+          ]
+        }')
+    fi
+    echo "$payload"
 }
