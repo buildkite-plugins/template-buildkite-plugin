@@ -15,6 +15,12 @@ if [ -z "${API_SECRET_KEY}" ]; then
 fi
 
 
+API_SECRET_KEY_VALUE=$(buildkite-agent secret get "${API_SECRET_KEY}" 2>/dev/null)  
+if [ -z "${API_SECRET_KEY_VALUE}" ]; then
+  echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$API_SECRET_KEY'."
+  return 1
+fi 
+
 # Load Plugin configuration
 MODEL=$(plugin_read_config MODEL "gpt-4o-mini")
 
@@ -35,5 +41,5 @@ if [ -n "${SYSTEM_PROMPT}" ]; then
 fi
 
 # Send the prompt to ChatGPT
-send_prompt "${USER_PROMPT}" "${SYSTEM_PROMPT}" "${MODEL}"
+send_prompt "${API_SECRET_KEY_VALUE}" "${MODEL}" "${USER_PROMPT}" "${SYSTEM_PROMPT}"
 echo "~~~ Done."

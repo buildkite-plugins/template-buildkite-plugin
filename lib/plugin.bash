@@ -62,9 +62,10 @@ function plugin_read_config() {
 }
 
 function send_prompt() {
-  local user_prompt="$1"
-  local system_prompt="$2"
-  local model="$3"
+  local api_secret_key="$1"
+  local model="$2"
+  local user_prompt="$3"
+  local system_prompt="$4"
 
   local prompt_payload
   #check if user_prompt is equal to "ping"
@@ -75,7 +76,7 @@ function send_prompt() {
     prompt_payload=$(format_payload "${model}" "${user_prompt}" "${system_prompt}")
   fi
   # Call the OpenAI API
-  response=$(call_openapi_chatgpt "${prompt_payload}")
+  response=$(call_openapi_chatgpt "${api_secret_key}"  "${prompt_payload}")
   echo "Response from ChatGPT:"
   #assign response to a variable and check if it is empty
   if [ -z "${response}" ]; then
@@ -134,19 +135,13 @@ function ping_payload() {
   echo "$payload"
 }
 
-function call_openapi_chatgpt() { 
-  local payload="$1"
-
-  # Set the OpenAI API Key from the Buildkite secret
-  openai_api_key=$(buildkite-agent secret get "$API_SECRET_KEY")
-  if [ -z "${openai_api_key}" ]; then
-    echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$API_SECRET_KEY'."
-    return 1
-  fi 
+function call_openapi_chatgpt() {
+  local api_secret_key="$1"
+  local payload="$2"
 
   # Call the OpenAI API
   response=$(curl -sS -X POST "https://api.openai.com/v1/chat/completions" \
-    -H "Authorization: Bearer ${openai_api_key}" \
+    -H "Authorization: Bearer ${api_secret_key}" \
     -H "Content-Type: application/json" \
     -d "${payload}")
 
