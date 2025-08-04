@@ -8,14 +8,14 @@ DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 . "$DIR/../lib/plugin.bash"
 
 echo "--- :robot_face: ChatGPT Prompter Plugin"
-echo "Verifying API token..."
+echo "Verifying plugin parameters..."
 API_SECRET_KEY=$(plugin_read_config API_SECRET_KEY_NAME "")
 if [ -z "${API_SECRET_KEY}" ]; then
   echo '❌ Error: Missing Buildkite secret key. The OpenAI API Key is required for ChatGPT Log Analyser plugin'
   exit 1
 fi
 
-API_SECRET_KEY_VALUE=$(buildkite-agent secret get "${API_SECRET_KEY}" 2>/dev/null)  
+API_SECRET_KEY_VALUE=$(buildkite-agent secret get "${API_SECRET_KEY}")  
 if [ -z "${API_SECRET_KEY_VALUE}" ]; then
   echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$API_SECRET_KEY'."
   return 1

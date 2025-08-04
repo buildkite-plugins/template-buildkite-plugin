@@ -70,66 +70,89 @@ function send_prompt() {
   local prompt_payload
   #check if user_prompt is equal to "ping"
   if [ "${user_prompt}" == "ping" ]; then
-    echo "Pinging ChatGPT with model: ${model}"
     prompt_payload=$(ping_payload "${model}")
   else
     prompt_payload=$(format_payload "${model}" "${user_prompt}" "${system_prompt}")
   fi
   # Call the OpenAI API
   response=$(call_openapi_chatgpt "${api_secret_key}"  "${prompt_payload}")
-  echo "Response from ChatGPT:"
-  #assign response to a variable and check if it is empty
+  
+  # Validate and process the response
+  if ! validate_and_process_response "${response}"; then
+    return 1
+  fi
+
+  # Extract and display the response content
+  total_tokens=$(echo "${response}" | jq -r '.usage.total_tokens')
+  echo "Summary:"
+  echo "  Total tokens used: ${total_tokens}"
+
+  ## annotate the response into the Build
+  if [ "${user_prompt}" == "ping" ]; then 
+    echo -e "# ChatGPT Annotation Plugin 
+        ✅ Verified OpenAI token. Successfully pinged ChatGPT with model: ${model}"  \
+        | buildkite-agent annotate  --style "info" --context "chatgpt-prompter"     
+
+    return 0
+  fi
+
+  ## Generate a more elaborate annotation
+  content_response=$(echo "${response}" | jq -r '.choices[0].message.content' | sed 's/^/  /') 
+    echo -e "### ChatGPT Annotation Plugin"  | buildkite-agent annotate  --style "info" --context "chatgpt-prompter"    
+    echo -e "${content_response}"  | buildkite-agent annotate  --style "info" --context "chatgpt-prompter" --append
+
+  return 0
+}
+
+function validate_and_process_response() {
+  local response="$1"
+  
+  # Check if jq is available
+  if ! command -v jq &> /dev/null; then
+    echo "❌ Error: jq is not installed. Please install jq to parse the response from OpenAI API."
+    return 1
+  fi
+  
+  # Check if response is empty
   if [ -z "${response}" ]; then
     echo "❌ Error: No response received from OpenAI API."
     return 1
   fi
+  
   # Check if the response contains an error
   if echo "${response}" | jq -e '.error' > /dev/null; then
     echo "❌ Error: $(echo "${response}" | jq -r '.error.message')"
     return 1
   fi
+  
   # Check if the response contains choices
   if ! echo "${response}" | jq -e '.choices' > /dev/null; then
     echo "❌ Error: No choices found in the response from OpenAI API."
     return 1
   fi
+  
   # Check if the response contains a message
   if ! echo "${response}" | jq -e '.choices[0].message.content' > /dev/null; then
     echo "❌ Error: No message content found in the response from OpenAI API."
     return 1
   fi
-  # Print the message content
-  echo "ChatGPT Response:"
-  # Use jq to extract the message content from the response
-  if ! command -v jq &> /dev/null; then
-    echo "❌ Error: jq is not installed. Please install jq to parse the response from OpenAI API."
-    return 1
-  fi
-  # Print the message content
-  echo "~~~"
-  echo "ChatGPT Response:"
-  content_response=$(echo "${response}" | jq -r '.choices[0].message.content' | sed 's/^/  /') 
-  buildkite-agent annotate --style "info" --context "chatgpt-prompter" \
-    "ChatGPT Response:\n\n${content_response}"
-  echo "✅ Successfully sent prompt to ChatGPT."
+  
   return 0
 }
 
 function ping_payload() { 
   local model="$1" 
 
-  echo "Pinging ChatGPT with model: ${model}"
-  
   # Prepare the payload
   local payload=$(jq -n \
     --arg model "$model" \
     '{
       model: $model,
       messages: [
-        { role: "user", content: "ping" }, 
+        { role: "user", content: "ping" }
       ],
       max_tokens: 1,
-      temperature: 0.0,
+      temperature: 0.0
     }')
 
   echo "$payload"
