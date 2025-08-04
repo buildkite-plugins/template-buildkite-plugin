@@ -77,11 +77,39 @@ function send_prompt() {
   # Call the OpenAI API
   response=$(call_openapi_chatgpt "${prompt_payload}")
   echo "Response from ChatGPT:"
-  echo "${response}" | jq -r '.choices[0].message.content // "No response"'
-  if [ $? -ne 0 ]; then
-    echo "❌ Error: Failed to parse response from OpenAI API."
+  #assign response to a variable and check if it is empty
+  if [ -z "${response}" ]; then
+    echo "❌ Error: No response received from OpenAI API."
     return 1
   fi
+  # Check if the response contains an error
+  if echo "${response}" | jq -e '.error' > /dev/null; then
+    echo "❌ Error: $(echo "${response}" | jq -r '.error.message')"
+    return 1
+  fi
+  # Check if the response contains choices
+  if ! echo "${response}" | jq -e '.choices' > /dev/null; then
+    echo "❌ Error: No choices found in the response from OpenAI API."
+    return 1
+  fi
+  # Check if the response contains a message
+  if ! echo "${response}" | jq -e '.choices[0].message.content' > /dev/null; then
+    echo "❌ Error: No message content found in the response from OpenAI API."
+    return 1
+  fi
+  # Print the message content
+  echo "ChatGPT Response:"
+  # Use jq to extract the message content from the response
+  if ! command -v jq &> /dev/null; then
+    echo "❌ Error: jq is not installed. Please install jq to parse the response from OpenAI API."
+    return 1
+  fi
+  # Print the message content
+  echo "~~~"
+  echo "ChatGPT Response:"
+  content_response=$(echo "${response}" | jq -r '.choices[0].message.content' | sed 's/^/  /') 
+  buildkite-agent annotate --style "info" --context "chatgpt-prompter" \
+    "ChatGPT Response:\n\n${content_response}"
   echo "✅ Successfully sent prompt to ChatGPT."
   return 0
 }
