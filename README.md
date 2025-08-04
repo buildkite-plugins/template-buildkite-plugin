@@ -1,6 +1,6 @@
-# Template Buildkite Plugin [![Build status](https://badge.buildkite.com/d673030645c7f3e7e397affddd97cfe9f93a40547ed17b6dc5.svg)](https://buildkite.com/buildkite/plugins-template)
+# ChatGPT Prompter Buildkite Plugin [![Build status](https://badge.buildkite.com/d673030645c7f3e7e397affddd97cfe9f93a40547ed17b6dc5.svg)](https://buildkite.com/buildkite/plugins-template)
 
-A Buildkite plugin for something awesome
+A Buildkite plugin that allows the user to send a prompt to ChatGPT
 
 ## Options
 
@@ -8,15 +8,36 @@ These are all the options available to configure this plugin's behaviour.
 
 ### Required
 
-#### `mandatory` (string)
+#### `api_secret_key_name` (string)
 
-A great description of what this is supposed to do.
+The name of the Buildkite secret key that contains your OpenAI API token to use for ChatGPT access. 
 
 ### Optional
 
-#### `optional` (string)
+#### `model` (string)
 
-Describe how the plugin behaviour changes if this option is not specified, allowed values and its default.
+The ChatGPT model. Defaults to `GPT-4o mini`.
+
+#### `user_prompt` (string)
+
+The user prompt to send to ChatGPT. Defaults to "ping" the ChatGPT API.
+
+Example of the default payload sent on a ping: 
+
+```
+{
+  "model": "gpt-3.5-turbo",
+  "messages": [
+    {"role": "user", "content": "ping"}
+  ],
+  "max_tokens": 1,
+  "temperature": 0
+}
+```
+
+#### `system_prompt` (string)
+
+An option to provide a system prompt to ChatGPT together with the user prompt.
 
 ## Examples
 
@@ -27,8 +48,8 @@ steps:
   - label: "🔨 Running plugin"
     command: "echo template plugin"
     plugins:
-      - template#v1.0.0:
-          mandatory: "value"
+      - chatgpt-prompter#v0.0.1:
+          api_secret_key_name: "CHATGPT_SECRET_KEY_NAME" 
 ```
 
 ## And with other options as well
@@ -40,9 +61,11 @@ steps:
   - label: "🔨 Running plugin"
     command: "echo template plugin with options"
     plugins:
-      - template#v1.0.0:
-          mandatory: "value"
-          optional: "example"
+      - chatgpt-prompter#v0.0.1:
+          api_secret_key_name: "CHATGPT_SECRET_KEY_NAME" 
+          model: "GPT-4o"
+          user_prompt: "Ping"
+        
 ```
 
 ## Compatibility

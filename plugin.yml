@@ -1,14 +1,25 @@
-name: Buildkite Plugin
-description: Exceptional functionality
+name: ChatGPT Prompter
+description: Sends a user prompt to ChatGPT
 author: https://github.com/buildkite-plugins
 requirements:
   - bash
+  - curl
 configuration:
   properties:
-    mandatory:
+    api_secret_key_name:
       type: string
-    optional:
+      description: The Buildkite Secret key name that stores the OpenAI API Key to use for ChatGPT access.  
+    model:
       type: string
+      description: ChatGPT model to use.
+      enum: [gpt-4o-mini, gpt-4, gpt-3.5-turbo]
+      default: gpt-4o-mini
+    system_prompt:
+      type: string
+      description: The system prompt to send to ChatGPT
+    user_prompt:
+      type: string
+      description: The user prompt to send to ChatGPT. Defaults to "ping" the ChatGPT API.
+      default: ping
   required:
-    - mandatory
-  additionalProperties: false
+    - api_secret_key

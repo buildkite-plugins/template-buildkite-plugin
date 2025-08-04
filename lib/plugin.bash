@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PLUGIN_PREFIX="YOUR_PLUGIN_NAME"
+PLUGIN_PREFIX="CHATGPT_PROMPTER"
 
 # Reads either a value or a list from the given env prefix
 function prefix_read_list() {
@@ -59,4 +59,148 @@ function plugin_read_config() {
   local var="BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
   local default="${2:-}"
   echo "${!var:-$default}"
+}
+
+function send_prompt() {
+  local api_secret_key="$1"
+  local model="$2"
+  local user_prompt="$3"
+  local system_prompt="$4"
+
+  local prompt_payload
+  #check if user_prompt is equal to "ping"
+  if [ "${user_prompt}" == "ping" ]; then
+    prompt_payload=$(ping_payload "${model}")
+  else
+    prompt_payload=$(format_payload "${model}" "${user_prompt}" "${system_prompt}")
+  fi
+  # Call the OpenAI API
+  response=$(call_openapi_chatgpt "${api_secret_key}"  "${prompt_payload}")
+  
+  # Validate and process the response
+  if ! validate_and_process_response "${response}"; then
+    return 1
+  fi
+
+  # Extract and display the response content
+  total_tokens=$(echo "${response}" | jq -r '.usage.total_tokens')
+  echo "Summary:"
+  echo "  Total tokens used: ${total_tokens}"
+
+  ## annotate the response into the Build
+  if [ "${user_prompt}" == "ping" ]; then 
+    echo -e "# ChatGPT Annotation Plugin 
+        ✅ Verified OpenAI token. Successfully pinged ChatGPT with model: ${model}"  \
+        | buildkite-agent annotate  --style "info" --context "chatgpt-prompter"     
+
+    return 0
+  fi
+
+  ## Generate a more elaborate annotation
+  content_response=$(echo "${response}" | jq -r '.choices[0].message.content' | sed 's/^/  /') 
+    echo -e "### ChatGPT Annotation Plugin"  | buildkite-agent annotate  --style "info" --context "chatgpt-prompter"    
+    echo -e "${content_response}"  | buildkite-agent annotate  --style "info" --context "chatgpt-prompter" --append
+
+  return 0
+}
+
+function validate_and_process_response() {
+  local response="$1"
+  
+  # Check if jq is available
+  if ! command -v jq &> /dev/null; then
+    echo "❌ Error: jq is not installed. Please install jq to parse the response from OpenAI API."
+    return 1
+  fi
+  
+  # Check if response is empty
+  if [ -z "${response}" ]; then
+    echo "❌ Error: No response received from OpenAI API."
+    return 1
+  fi
+  
+  # Check if the response contains an error
+  if echo "${response}" | jq -e '.error' > /dev/null; then
+    echo "❌ Error: $(echo "${response}" | jq -r '.error.message')"
+    return 1
+  fi
+  
+  # Check if the response contains choices
+  if ! echo "${response}" | jq -e '.choices' > /dev/null; then
+    echo "❌ Error: No choices found in the response from OpenAI API."
+    return 1
+  fi
+  
+  # Check if the response contains a message
+  if ! echo "${response}" | jq -e '.choices[0].message.content' > /dev/null; then
+    echo "❌ Error: No message content found in the response from OpenAI API."
+    return 1
+  fi
+  
+  return 0
+}
+
+function ping_payload() { 
+  local model="$1" 
+
+  # Prepare the payload
+  local payload=$(jq -n \
+    --arg model "$model" \
+    '{
+      model: $model,
+      messages: [
+        { role: "user", content: "ping" }
+      ],
+      max_tokens: 1,
+      temperature: 0.0
+    }')
+
+  echo "$payload"
+}
+
+function call_openapi_chatgpt() {
+  local api_secret_key="$1"
+  local payload="$2"
+
+  # Call the OpenAI API
+  response=$(curl -sS -X POST "https://api.openai.com/v1/chat/completions" \
+    -H "Authorization: Bearer ${api_secret_key}" \
+    -H "Content-Type: application/json" \
+    -d "${payload}")
+
+  echo "$response" 
+}
+
+function format_payload() {
+  local model="$1"
+  local user_prompt="$2"
+  local system_prompt="$3"
+
+  local payload
+  if [ -z "${system_prompt}" ]; then
+      # Prepare the payload without system prompt
+      payload=$(jq -n \
+        --arg model "$model" \
+        --arg user_prompt "$user_prompt" \
+        '{
+          model: $model,
+          messages: [
+            { role: "user", content: $user_prompt }
+          ] 
+        }')
+    else
+      # Prepare the payload with system prompt
+      payload=$(jq -n \
+        --arg model "$model" \
+        --arg user_prompt "$user_prompt" \
+        --arg system_prompt "$system_prompt" \
+        '{
+          model: $model,
+          messages: [
+            { role: "system", content: $system_prompt },
+            { role: "user", content: $user_prompt }
+          ]
+        }')
+    fi
+    echo "$payload"
 }
