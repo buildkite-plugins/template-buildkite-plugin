@@ -5,36 +5,40 @@ setup() {
 
   # Uncomment to enable stub debugging
   # export CURL_STUB_DEBUG=/dev/tty
-
-  # you can set variables common to all tests here
-  # export BUILDKITE_PLUGIN_YOUR_CHATGPT_PROMPTER_API_SECRET_KEY_NAME='Value'
+ 
 }
 
-@test "Missing mandatory option fails" {
+@test "Missing API Secret Key configuration fails" {
   unset BUILDKITE_PLUGIN_YOUR_CHATGPT_PROMPTER_API_SECRET_KEY_NAME
 
   run "$PWD"/hooks/command
 
   assert_failure
-  assert_output --partial 'Missing api_secret_key_name option'
+  assert_output --partial 'Missing Missing api secret key'
   refute_output --partial 'Running plugin'
 }
 
-# @test "Normal basic operations" {
+@test "Empty or Incorrect API Secret Key Name in configuration fails" {
+  export BUILDKITE_PLUGIN_YOUR_CHATGPT_PROMPTER_API_SECRET_KEY_NAME=''
 
-#   run "$PWD"/hooks/command
+  run "$PWD"/hooks/command
 
-#   assert_success
-#   assert_output --partial 'Running plugin with options'
-#   assert_output --partial '- mandatory: Value'
-# }
+  assert_failure
+  assert_output --partial 'Secret not found or access denied'
+  refute_output --partial 'Running plugin'
+}
 
-# @test "Optional value changes bejaviour" {
-#   export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_OPTIONAL='other value'
 
-#   run "$PWD"/hooks/command
+@test "Invalid API Token fails" {
+  export BUILDKITE_PLUGIN_YOUR_CHATGPT_PROMPTER_API_SECRET_KEY_NAME='123'
 
-#   assert_success
-#   assert_output --partial 'Running plugin with options'
-#   assert_output --partial '- optional: other value'
-# }
+  run "$PWD"/hooks/command
+
+  assert_success
+  assert_output --partial 'OpenAI API Key retrieved successfully'
+  assert_output --partial 'Model: gpt-4o-mini'
+  assert_output --partial 'User Prompt: ping' 
+}
+
+
+ 
