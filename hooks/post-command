@@ -7,23 +7,23 @@ DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 # shellcheck source=lib/plugin.bash
 . "$DIR/../lib/plugin.bash"
 
+echo "--- :robot_face: ChatGPT Prompter Plugin"
+echo "Verifying API token..."
 API_SECRET_KEY=$(plugin_read_config API_SECRET_KEY_NAME "")
-
 if [ -z "${API_SECRET_KEY}" ]; then
   echo '❌ Error: Missing Buildkite secret key. The OpenAI API Key is required for ChatGPT Log Analyser plugin'
   exit 1
 fi
-
 
 API_SECRET_KEY_VALUE=$(buildkite-agent secret get "${API_SECRET_KEY}" 2>/dev/null)  
 if [ -z "${API_SECRET_KEY_VALUE}" ]; then
   echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$API_SECRET_KEY'."
   return 1
 fi 
+echo "✅ OpenAI API Key retrieved successfully."
 
 # Load Plugin configuration
 MODEL=$(plugin_read_config MODEL "gpt-4o-mini")
-
 if [ -z "${MODEL}" ]; then
   echo "❌ Error: Missing or invalid model configuration. Please set the MODEL in your plugin configuration."
   exit 1
@@ -33,7 +33,7 @@ USER_PROMPT=$(plugin_read_config USER_PROMPT "ping")
 SYSTEM_PROMPT=$(plugin_read_config SYSTEM_PROMPT "")
 
 # Set the model environment variable
-echo "--- :robot_face: ChatGPT Prompter Plugin" 
+
 echo "✅ Model: ${MODEL}"
 echo "✅ User Prompt: ${USER_PROMPT}"
 if [ -n "${SYSTEM_PROMPT}" ]; then
