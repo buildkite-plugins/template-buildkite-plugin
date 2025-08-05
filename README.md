@@ -130,6 +130,20 @@ steps:
 
 Your policy on how to contribute to the plugin!
 
+## Developing
+
+To run testing, shellchecks, and plugin linting, use `bk run` with the [Buildkite CLI](https://github.com/buildkite/cli):
+
+```bash
+bk run
+```
+
+Alternatively, to run just the tests, you can use the [Buildkite Plugin Tester](https://github.com/buildkite-plugins/buildkite-plugin-tester):
+
+```bash
+docker run --rm -ti -v "${PWD}":/plugin buildkite/plugin-tester:latest
+```
+
 ## 📜 License
 
 The package is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
