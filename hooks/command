@@ -7,6 +7,29 @@ DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 # shellcheck source=lib/plugin.bash
 . "$DIR/../lib/plugin.bash"
 
+# Validation functions
+validate_numbers_array() {
+  if plugin_read_list_into_result NUMBERS; then
+    for number in "${result[@]}"; do
+      if ! [[ "$number" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+        echo "Error: numbers array contains non-numeric value: $number"
+        exit 1
+      fi
+    done
+  fi
+}
+
+validate_timeout() {
+  local timeout_option
+  timeout_option=$(plugin_read_config TIMEOUT "")
+  if [ -n "${timeout_option}" ]; then
+    if [[ "$timeout_option" -lt 1 || "$timeout_option" -gt 60 ]]; then
+      echo "Error: timeout must be between 1 and 60 seconds"
+      exit 1
+    fi
+  fi
+}
+
 MANDATORY_OPTION=$(plugin_read_config MANDATORY "")
 
 if [ -z "${MANDATORY_OPTION}" ]; then
@@ -16,6 +39,38 @@ fi
 
 OPTIONAL_OPTION=$(plugin_read_config OPTIONAL "default")
 
+# Validate configuration early before any output
+validate_numbers_array
+validate_timeout
+
 echo "Running plugin with options:"
 echo " - mandatory: ${MANDATORY_OPTION}"
 echo " - optional: ${OPTIONAL_OPTION}"
+
+# Handle numbers array
+if plugin_read_list_into_result NUMBERS; then
+  numbers_list=$(printf '%s, ' "${result[@]}")
+  numbers_list=${numbers_list%, }
+  echo " - numbers: ${numbers_list}"
+fi
+
+# Handle enabled boolean
+ENABLED_OPTION=$(plugin_read_config ENABLED "false")
+echo " - enabled: ${ENABLED_OPTION}"
+
+# Handle config object
+CONFIG_HOST=$(plugin_read_config CONFIG_HOST "")
+if [ -n "${CONFIG_HOST}" ]; then
+  CONFIG_PORT=$(plugin_read_config CONFIG_PORT "1234")
+  CONFIG_SSL=$(plugin_read_config CONFIG_SSL "true")
+
+  echo " - config.host: ${CONFIG_HOST}"
+  echo " - config.port: ${CONFIG_PORT}"
+  echo " - config.ssl: ${CONFIG_SSL}"
+fi
+
+# Handle timeout number (already validated above)
+TIMEOUT_OPTION=$(plugin_read_config TIMEOUT "")
+if [ -n "${TIMEOUT_OPTION}" ]; then
+  echo " - timeout: ${TIMEOUT_OPTION}"
+fi
