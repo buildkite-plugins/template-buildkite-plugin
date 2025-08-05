@@ -7,8 +7,42 @@ configuration:
   properties:
     mandatory:
       type: string
+      description: "A required option for your plugin."
     optional:
       type: string
+      description: "An optional configuration for your plugin."
+    numbers:
+      type: array
+      description: "An array where only numbers are valid."
+      items:
+        type: number
+    enabled:
+      type: boolean
+      description: "A boolean that can enable or disable a feature. Defaults to `false`."
+      default: false
+    config:
+      type: object
+      description: "An object with nested properties, each defined with specific types. The `host` property must always be defined."
+      properties:
+        host:
+          type: string
+          description: "A required string value for `config`."
+        port:
+          type: number
+          description: "A number value with a default that can be overridden."
+          default: 1234
+        ssl:
+          type: boolean
+          description: "A boolen value that defaults to `true`."
+          default: true
+      required:
+        - host
+      additionalProperties: true
+    timeout:
+      type: number
+      description: "A number with minimum and maximum values defined."
+      minimum: 1
+      maximum: 60
   required:
     - mandatory
   additionalProperties: false

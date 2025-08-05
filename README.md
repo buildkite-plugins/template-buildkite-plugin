@@ -18,6 +18,34 @@ A great description of what this is supposed to do.
 
 Describe how the plugin behaviour changes if this option is not specified, allowed values and its default.
 
+#### `numbers` (array)
+
+An array of numeric values for processing. Each element must be a number.
+
+#### `enabled` (boolean)
+
+Enable or disable a specific feature. Defaults to `false`.
+
+#### `config` (object)
+
+Configuration object with key-value pairs.
+
+##### `config.host` (string, required)
+
+The hostname or IP address to connect to.
+
+##### `config.port` (number, optional)
+
+The port number to use for the connection. Defaults to `1234`.
+
+##### `config.ssl` (boolean, optional)
+
+Whether to use SSL/TLS for the connection. Defaults to `true`.
+
+#### `timeout` (number)
+
+Timeout value in seconds. Must be between 1 and 60 seconds.
+
 ## Examples
 
 Show how your plugin is to be used
@@ -43,6 +71,49 @@ steps:
       - template#v1.0.0:
           mandatory: "value"
           optional: "example"
+```
+
+```yaml
+steps:
+  - label: "🔨 Array processing"
+    command: "echo processing array"
+    plugins:
+      - template#v1.0.0:
+          mandatory: "value"
+          numbers: [1, 2, 3, 5, 8]
+```
+
+```yaml
+steps:
+  - label: "🔨 Feature toggle"
+    command: "echo feature processing"
+    plugins:
+      - template#v1.0.0:
+          mandatory: "value"
+          enabled: true
+```
+
+```yaml
+steps:
+  - label: "🔨 Configuration"
+    command: "echo processing config"
+    plugins:
+      - template#v1.0.0:
+          mandatory: "value"
+          config:
+            host: "example.com"
+            port: 8080
+            ssl: false
+```
+
+```yaml
+steps:
+  - label: "🔨 Timeout handling"
+    command: "echo processing with timeout"
+    plugins:
+      - template#v1.0.0:
+          mandatory: "value"
+          timeout: 30
 ```
 
 ## Compatibility
