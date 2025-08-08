@@ -103,6 +103,9 @@ function validate_bk_token() {
 function get_build_information() { 
   local build_number="$1"
   local bk_api_token="$2"
+ 
+  build_url="https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${build_number}"
+  echo "Retrieving Build Information for build number: ${build_url} ..."
 
   # Fetch build information from Buildkite API
   response=$(curl -sS -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${build_number}" \
@@ -117,7 +120,7 @@ function get_build_information() {
     return 1
   fi
 
-  echo "${response}" | jq -r '. | {build_id: .id, build_number: .number, pipeline_slug: .pipeline.slug, organization_slug: .organization.slug}'
+  echo "${response}" ###  | jq -r '. | {build_id: .id, build_number: .number, pipeline_slug: .pipeline.slug, organization_slug: .organization.slug}'
 }
 
 function send_prompt() {
