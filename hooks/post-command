@@ -9,18 +9,29 @@ DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 echo "--- :robot_face: ChatGPT Prompter Plugin"
 echo "Verifying plugin parameters..."
-API_SECRET_KEY=$(plugin_read_config API_SECRET_KEY_NAME "")
-if [ -z "${API_SECRET_KEY}" ]; then
-  echo '❌ Error: Missing Buildkite secret key. The OpenAI API Key is required for ChatGPT Log Analyser plugin'
+OPENAI_API_SECRET_KEY=$(plugin_read_config API_TOKEN_SECRET_KEY "")
+
+if [ -z "${OPENAI_API_SECRET_KEY}" ]; then
+  echo '❌ Error: Missing Buildkite secret key. The OpenAI API Key is required for ChatGPT Prompter plugin'
   exit 1
 fi
 
-API_SECRET_KEY_VALUE=$(buildkite-agent secret get "${API_SECRET_KEY}")  
-if [ -z "${API_SECRET_KEY_VALUE}" ]; then
-  echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$API_SECRET_KEY'."
+OPENAI_API_TOKEN=$(buildkite-agent secret get "${OPENAI_API_SECRET_KEY}")
+if [ -z "${OPENAI_API_TOKEN}" ]; then
+  echo "❌ Error: Failed to retrieve OpenAI API Key from Buildkite secret '$OPENAI_API_TOKEN'."
   return 1
 fi 
 echo "✅ OpenAI API Key retrieved successfully."
+
+BK_API_SECRET_KEY=$(plugin_read_config BK_API_SECRET_KEY "")
+if [ -z "${BK_API_SECRET_KEY}" ]; then
+  echo '❌ Error: Missing Buildkite secret key. The BK API Key is required for ChatGPT Prompter plugin'
+  exit 1
+fi
+
+BK_API_TOKEN=$(buildkite-agent secret get "${BK_API_SECRET_KEY}")
+validate_bk_token "${BK_API_TOKEN}" || exit 1 
+
 
 # Load Plugin configuration
 MODEL=$(plugin_read_config MODEL "gpt-4o-mini")

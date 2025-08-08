@@ -61,26 +61,14 @@ function plugin_read_config() {
   echo "${!var:-$default}"
 }
 
-function get_bk_token() {
-  local bk_api_secret_key=$(plugin_read_config "BK_API_SECRET_KEY" "")
-  if [ -z "${bk_api_secret_key}" ]; then
-    echo "" 
-  bk_api_token=$(buildkite-agent secret get "${BK_API_SECRET_KEY}")
-  if [ -z "${bk_api_token}" ]; then
-    echo "❌ Error: Failed to retrieve BK API Key from Buildkite secret '$BK_API_SECRET_KEY'."
-    return 1
-  fi
-
-  echo "${bk_api_token}"
-}
-
 function validate_bk_token() {
   local bk_api_token="$1"
+  local errors=0
 
   # Check if the BK API token is valid
   if [ -z "${bk_api_token}" ]; then
     echo "❌ Error: Missing Buildkite API token."
-    return 1
+    errors=$((errors + 1))
   fi
 
   #validate token scope
@@ -91,14 +79,14 @@ function validate_bk_token() {
   echo "--- Buildkite API Token Scopes ---"
   echo "${response}" | jq -r '.scopes[]'
 
-  
+
   scopes=$(echo "${response}" | jq -r '.scopes[]')
   if [[ "${scopes}" =~ write ]]; then
     echo "❌ Error: The Buildkite API token has write permissions which are not allowed for security reasons."
-    return 1
+    errors=$((errors + 1))
   fi
   echo "✅ Buildkite API token is valid and has appropriate read-only scopes."
-  return 0
+  return ${error}
 }
 
 function send_prompt() {
