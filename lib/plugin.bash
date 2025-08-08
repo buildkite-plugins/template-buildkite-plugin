@@ -100,6 +100,26 @@ function validate_bk_token() {
   return 0
 }
 
+function get_build_information() {
+  local build_id="$1"
+  local bk_api_token="$2"
+
+  # Fetch build information from Buildkite API
+  response=$(curl -sS -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${BUILDKITE_BUILD_NUMBER}" \
+    -H "Authorization: Bearer ${bk_api_token}" \
+    -H "Content-Type: application/json")
+  if [ $? -ne 0 ]; then
+    echo "❌ Error: Failed to retrieve build information from Buildkite API."
+    return 1
+  fi
+  if [ -z "${response}" ]; then
+    echo "❌ Error: No information retrieved from the current build."
+    return 1
+  fi
+
+  echo "${response}" | jq -r '. | {build_id: .id, build_number: .number, pipeline_slug: .pipeline.slug, organization_slug: .organization.slug}'
+}
+
 function send_prompt() {
   local api_secret_key="$1"
   local model="$2"
