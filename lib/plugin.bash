@@ -100,12 +100,12 @@ function validate_bk_token() {
   return 0
 }
 
-function get_build_information() {
-  local build_id="$1"
+function get_build_information() { 
+  local build_number="$1"
   local bk_api_token="$2"
 
   # Fetch build information from Buildkite API
-  response=$(curl -sS -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${BUILDKITE_BUILD_NUMBER}" \
+  response=$(curl -sS -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${build_number}" \
     -H "Authorization: Bearer ${bk_api_token}" \
     -H "Content-Type: application/json")
   if [ $? -ne 0 ]; then

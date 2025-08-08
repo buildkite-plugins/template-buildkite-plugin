@@ -53,6 +53,11 @@ if [ -n "${SYSTEM_PROMPT}" ]; then
   echo "✅ System Prompt: ${SYSTEM_PROMPT}"
 fi
 
+## Getting Build Information
+echo "Retrieving Build Information ..."
+get_build_information "${BUILDKITE_BUILD_ID}" "${BK_API_TOKEN}" || exit 1
+echo "✅ Build Information retrieved successfully."
+
 # Send the prompt to ChatGPT
 # send_prompt "${OPENAI_API_TOKEN}" "${MODEL}" "${USER_PROMPT}" "${SYSTEM_PROMPT}"
 echo "~~~ Done."
