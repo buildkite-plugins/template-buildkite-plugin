@@ -8,7 +8,7 @@ DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 . "$DIR/../lib/plugin.bash"
 
 echo "--- :robot_face: ChatGPT Prompter Plugin"
-echo "Verifying plugin parameters..."
+echo "Retrieving OpenAI API Key ..."
 OPENAI_API_SECRET_KEY=$(plugin_read_config API_TOKEN_SECRET_KEY "")
 
 if [ -z "${OPENAI_API_SECRET_KEY}" ]; then
@@ -23,6 +23,7 @@ if [ -z "${OPENAI_API_TOKEN}" ]; then
 fi 
 echo "✅ OpenAI API Key retrieved successfully."
 
+echo "Retrieving Buildkite API Token ..."
 BK_TOKEN_SECRET_KEY=$(plugin_read_config BK_TOKEN_SECRET_KEY "")
 if [ -z "${BK_TOKEN_SECRET_KEY}" ]; then
   echo '❌ Error: Missing Buildkite secret key. The BK API Key is required for ChatGPT Prompter plugin'
@@ -32,6 +33,7 @@ fi
 BK_API_TOKEN=$(buildkite-agent secret get "${BK_TOKEN_SECRET_KEY}")
 validate_bk_token "${BK_API_TOKEN}" || exit 1
 
+echo "Retrieving other plugin configurations ..."
 
 # Load Plugin configuration
 MODEL=$(plugin_read_config MODEL "gpt-4o-mini")
