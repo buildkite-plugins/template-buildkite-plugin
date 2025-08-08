@@ -73,9 +73,7 @@ function validate_bk_token() {
   #validate token scope
   response=$(curl -H "Authorization: Bearer ${bk_api_token}" \
     -X GET "https://api.buildkite.com/v2/access-token")
- 
-
-  echo "--- Buildkite API Token Scopes ---"
+  
   #check if response is 200
   if [ $? -ne 0 ]; then
     echo "❌ Error: Invalid Buildkite API token. Please check the token configured in your cluster secrets."
@@ -92,9 +90,9 @@ function validate_bk_token() {
     return 1
   fi 
 
-  scopes=$(echo "${response}" | jq -r '.scopes[]')  
-  echo "Scopes: ${scopes}"
+  scopes=$(echo "${response}" | jq -r '.scopes[]')   
   if [[ "${scopes}" =~ write ]]; then
+    echo "Scopes: ${scopes}"  
     echo "❌ Error: The Buildkite API token has write permissions which are not allowed to use in this plugin for security reasons."
     return 1
   fi
