@@ -55,7 +55,7 @@ fi
 
 ## Getting Build Information
 echo "Retrieving Build Information ..."
-get_build_information "${BUILDKITE_BUILD_ID}" "${BK_API_TOKEN}" || exit 1
+get_build_information "${BUILDKITE_BUILD_NUMBER}" "${BK_API_TOKEN}" || exit 1
 echo "✅ Build Information retrieved successfully."
 
 # Send the prompt to ChatGPT
