@@ -23,14 +23,14 @@ if [ -z "${OPENAI_API_TOKEN}" ]; then
 fi 
 echo "✅ OpenAI API Key retrieved successfully."
 
-BK_API_SECRET_KEY=$(plugin_read_config BK_API_SECRET_KEY "")
-if [ -z "${BK_API_SECRET_KEY}" ]; then
+BK_TOKEN_SECRET_KEY=$(plugin_read_config BK_TOKEN_SECRET_KEY "")
+if [ -z "${BK_TOKEN_SECRET_KEY}" ]; then
   echo '❌ Error: Missing Buildkite secret key. The BK API Key is required for ChatGPT Prompter plugin'
   exit 1
 fi
 
-BK_API_TOKEN=$(buildkite-agent secret get "${BK_API_SECRET_KEY}")
-validate_bk_token "${BK_API_TOKEN}" || exit 1 
+BK_API_TOKEN=$(buildkite-agent secret get "${BK_TOKEN_SECRET_KEY}")
+validate_bk_token "${BK_API_TOKEN}" || exit 1
 
 
 # Load Plugin configuration
