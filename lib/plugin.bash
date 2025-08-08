@@ -243,11 +243,11 @@ function format_payload() {
   payload=$(jq -n \
     --arg model "$model" \
     --arg system_prompt "$base_prompt" \
-    --arg user_prompt "$base_prompt" \         
-    '{
+    --arg build_info "$build_info" \
+     '{
       model: $model,
       messages: [
-        { role: "system", content: $base_prompt },
+        { role: "system", content: $system_prompt },
         { role: "user", content: $build_info }
       ]
     }') 
