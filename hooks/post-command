@@ -52,5 +52,5 @@ if [ -n "${SYSTEM_PROMPT}" ]; then
 fi
 
 # Send the prompt to ChatGPT
-send_prompt "${API_SECRET_KEY_VALUE}" "${MODEL}" "${USER_PROMPT}" "${SYSTEM_PROMPT}"
+# send_prompt "${OPENAI_API_TOKEN}" "${MODEL}" "${USER_PROMPT}" "${SYSTEM_PROMPT}"
 echo "~~~ Done."
