@@ -76,10 +76,24 @@ function validate_bk_token() {
  
 
   echo "--- Buildkite API Token Scopes ---"
-  echo "${response}" | jq -r '.scopes[]'
+  #check if response is 200
+  if [ $? -ne 0 ]; then
+    echo "❌ Error: Failed to retrieve Buildkite API token scopes. Please check your Buildkite API token."
+    return 1
+  fi
+  #check if response is empty
+  if [ -z "${response}" ]; then
+    echo "❌ Error: Failed to retrieve Buildkite API token scopes."
+    return 1
+  fi
 
+  if ! echo "${response}" | jq -e '.scopes' > /dev/null; then
+    echo "❌ Error: No scopes found in the Buildkite API token response."
+    return 1
+  fi 
 
-  scopes=$(echo "${response}" | jq -r '.scopes[]')
+  scopes=$(echo "${response}" | jq -r '.scopes[]')  
+  echo "Scopes: ${scopes}"
   if [[ "${scopes}" =~ write ]]; then
     echo "❌ Error: The Buildkite API token has write permissions which are not allowed for security reasons."
     return 1
