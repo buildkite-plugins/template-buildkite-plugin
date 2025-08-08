@@ -42,22 +42,24 @@ if [ -z "${MODEL}" ]; then
   exit 1
 fi
 
-USER_PROMPT=$(plugin_read_config USER_PROMPT "ping")
-SYSTEM_PROMPT=$(plugin_read_config SYSTEM_PROMPT "")
+CUSTOM_PROMPT=$(plugin_read_config CUSTOM_PROMPT "") 
 
 # Set the model environment variable
 
-echo "✅ Model: ${MODEL}"
-echo "✅ User Prompt: ${USER_PROMPT}"
-if [ -n "${SYSTEM_PROMPT}" ]; then
-  echo "✅ System Prompt: ${SYSTEM_PROMPT}"
+echo "✅ Model: ${MODEL}" 
+if [ -n "${CUSTOM_PROMPT}" ]; then
+  echo "✅ Custom Prompt: ${CUSTOM_PROMPT}"
 fi
 
 ## Getting Build Information
 echo "Retrieving Build Information ..."
-get_build_information "${BUILDKITE_BUILD_NUMBER}" "${BK_API_TOKEN}" || exit 1
+BUILD_INFO=$(get_current_build_information "${BK_API_TOKEN}")
+if [ -z "${BUILD_INFO}" ]; then
+  echo "❌ Error: Failed to retrieve build information from Buildkite API. Please check the Buildkite API token and organization/pipeline configuration."
+  exit 1
+fi
 echo "✅ Build Information retrieved successfully."
 
 # Send the prompt to ChatGPT
-# send_prompt "${OPENAI_API_TOKEN}" "${MODEL}" "${USER_PROMPT}" "${SYSTEM_PROMPT}"
+send_prompt "${OPENAI_API_TOKEN}" "${MODEL}" "${CUSTOM_PROMPT}" "${BUILD_INFO}"  
 echo "~~~ Done."

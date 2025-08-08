@@ -16,13 +16,10 @@ configuration:
       type: string
       description: ChatGPT model to use.
       enum: [gpt-4o-mini, gpt-4, gpt-3.5-turbo]
-      default: gpt-4o-mini
-    system_prompt:
+      default: gpt-4o-mini 
+    custom_prompt:
       type: string
-      description: The system prompt to send to ChatGPT
-    user_prompt:
-      type: string
-      description: The user prompt to send to ChatGPT. Defaults to "ping" the ChatGPT API.
-      default: ping
+      description: Additional context to prompt ChatGPT for include in its analysis. 
   required:
-    - api_secret_key
+    - api_token_secret_key
+    - bk_token_secret_key

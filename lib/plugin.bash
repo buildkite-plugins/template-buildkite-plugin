@@ -100,41 +100,35 @@ function validate_bk_token() {
   return 0
 }
 
-function get_build_information() { 
-  local build_number="$1"
-  local bk_api_token="$2"
- 
-  build_url="https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${build_number}"
-  echo "Retrieving Build Information for build number: ${build_url} ..."
-
+function get_current_build_information() {  
+  local bk_api_token="$1"
+  
   # Fetch build information from Buildkite API
-  response=$(curl -sS -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${build_number}" \
+  response=$(curl -s -f -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${BUILDKITE_BUILD_NUMBER}" \
     -H "Authorization: Bearer ${bk_api_token}" \
-    -H "Content-Type: application/json")
+    -H "Content-Type: application/json" 2>/dev/null) 
+
+  # Check if curl failed
   if [ $? -ne 0 ]; then
-    echo "❌ Error: Failed to retrieve build information from Buildkite API."
-    return 1
-  fi
-  if [ -z "${response}" ]; then
-    echo "❌ Error: No information retrieved from the current build."
-    return 1
+    echo ""
+    return
   fi
 
-  echo "${response}" ###  | jq -r '. | {build_id: .id, build_number: .number, pipeline_slug: .pipeline.slug, organization_slug: .organization.slug}'
+  echo "${response}"
 }
-
+ 
 function send_prompt() {
   local api_secret_key="$1"
   local model="$2"
   local user_prompt="$3"
-  local system_prompt="$4"
+  local build_info="$4"
 
   local prompt_payload
   #check if user_prompt is equal to "ping"
   if [ "${user_prompt}" == "ping" ]; then
     prompt_payload=$(ping_payload "${model}")
   else
-    prompt_payload=$(format_payload "${model}" "${user_prompt}" "${system_prompt}")
+    prompt_payload=$(format_payload "${model}" "${user_prompt}" "${build_info}")
   fi
   # Call the OpenAI API
   response=$(call_openapi_chatgpt "${api_secret_key}"  "${prompt_payload}")
@@ -235,34 +229,28 @@ function call_openapi_chatgpt() {
 
 function format_payload() {
   local model="$1"
-  local user_prompt="$2"
-  local system_prompt="$3"
+  local custom_prompt="$2"
+  local build_info="$3"
+  local base_prompt="You are an expert software engineer and DevOps specialist specialising in Buildkite. Please provide a detailed analysis of the build information provided."
 
   local payload
-  if [ -z "${system_prompt}" ]; then
-      # Prepare the payload without system prompt
-      payload=$(jq -n \
-        --arg model "$model" \
-        --arg user_prompt "$user_prompt" \
-        '{
-          model: $model,
-          messages: [
-            { role: "user", content: $user_prompt }
-          ] 
-        }')
-    else
-      # Prepare the payload with system prompt
-      payload=$(jq -n \
-        --arg model "$model" \
-        --arg user_prompt "$user_prompt" \
-        --arg system_prompt "$system_prompt" \
-        '{
-          model: $model,
-          messages: [
-            { role: "system", content: $system_prompt },
-            { role: "user", content: $user_prompt }
-          ]
-        }')
-    fi
+  # check if user prompt is not empty, append to default prompt "you are an expert."  
+  if [ -n "${custom_prompt}" ]; then
+      base_prompt="${base_prompt} ${custom_prompt}"
+  fi 
+
+  # Prepare the payload with prompt
+  payload=$(jq -n \
+    --arg model "$model" \
+    --arg system_prompt "$base_prompt" \
+    --arg user_prompt "$base_prompt" \         
+    '{
+      model: $model,
+      messages: [
+        { role: "system", content: $base_prompt },
+        { role: "user", content: $build_info }
+      ]
+    }') 
+
     echo "$payload"
 }

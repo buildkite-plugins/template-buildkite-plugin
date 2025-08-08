@@ -12,59 +12,48 @@ These are all the options available to configure this plugin's behaviour.
 
 The name of the Buildkite secret key that contains your OpenAI API token to use for ChatGPT access. 
 
+#### `bk_token_secret_key` (string)
+
+The name of the Buildkite secret key that contains the Buildkite API toke to use for Build analysis. 
+
 ### Optional
 
 #### `model` (string)
 
 The ChatGPT model. Defaults to `GPT-4o mini`.
 
-#### `user_prompt` (string)
+#### `custom_prompt` (string)
 
-The user prompt to send to ChatGPT. Defaults to "ping" the ChatGPT API.
-
-Example of the default payload sent on a ping: 
-
-```
-{
-  "model": "gpt-3.5-turbo",
-  "messages": [
-    {"role": "user", "content": "ping"}
-  ],
-  "max_tokens": 1,
-  "temperature": 0
-}
-```
-
-#### `system_prompt` (string)
-
-An option to provide a system prompt to ChatGPT together with the user prompt.
+Additional context to prompt ChatGPT for include in its analysis.   
 
 ## Examples
 
-Show how your plugin is to be used
+### Basic Usage - Analyse Current Build
 
 ```yaml
 steps:
-  - label: "🔨 Running plugin"
-    command: "echo template plugin"
+  - label: "🔍 Prompt ChatGPT to summarise build"
+    command: "npm test"
     plugins:
       - chatgpt-prompter#v0.0.1:
           api_secret_key_name: "CHATGPT_SECRET_KEY_NAME" 
+          bk_token_secret_key: "ORG_USER_TOKEN_SECRET_KEY_NAME"
 ```
 
-## And with other options as well
+## Provide Aditional Context  
 
-If you want to change the plugin behaviour:
+If you want to provide additional context or instructions to the default build summary, provide a `custom_prompt` parameter to the plugin. 
 
 ```yaml
 steps:
-  - label: "🔨 Running plugin"
+  - label: "🔍 Prompt ChatGPT to focus on build performance"
     command: "echo template plugin with options"
     plugins:
       - chatgpt-prompter#v0.0.1:
           api_secret_key_name: "CHATGPT_SECRET_KEY_NAME" 
+          bk_token_secret_key: "ORG_USER_TOKEN_SECRET_KEY_NAME"
           model: "GPT-4o"
-          user_prompt: "Ping"
+          custom_prompt: "Focus on build performance and optimization opportunities"
         
 ```
 
