@@ -61,5 +61,6 @@ fi
 echo "✅ Build Information retrieved successfully."
 
 # Send the prompt to ChatGPT
+echo "Sending build information to ChatGPT for analysis  ..."
 send_prompt "${OPENAI_API_TOKEN}" "${MODEL}" "${CUSTOM_PROMPT}" "${BUILD_INFO}"  
 echo "~~~ Done."
