@@ -78,11 +78,25 @@ function validate_required_tools() {
   return ${errors}
 }
 
+function get_openai_api_key() {
+  local api_key_config=""
+
+  api_key_config=$(plugin_read_config API_KEY "")
+  if [[ "${api_key_config}" =~ ^\$ ]]; then
+    api_key_config="$(eval "echo ${api_key_config}")"
+  else
+    api_key_config="${api_key_config}"
+  fi
+  # Trim any whitespace that might be causing issues
+  api_key_config=$(echo "$api_key_config" | tr -d '[:space:]')
+  echo "${api_key_config}"
+}
+
 function get_bk_api_token() {
   local bk_token_config=""
 
   bk_token_config=$(plugin_read_config BUILDKITE_API_TOKEN "")
-if [[ "${bk_token_config}" =~ ^\$ ]]; then
+  if [[ "${bk_token_config}" =~ ^\$ ]]; then
     echo "$(eval "echo ${bk_token_config}")"
     
   else
