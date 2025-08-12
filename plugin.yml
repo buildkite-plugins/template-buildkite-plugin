@@ -6,10 +6,10 @@ requirements:
   - curl
 configuration:
   properties:
-    api_token_secret_key:
+    api_key:
       type: string
       description: The Buildkite Secret key name that stores the OpenAI API Key to use for ChatGPT access.  
-    bk_token_secret_key:
+    buildkite_api_token:
       type: string
       description: The Buildkite Secret key name that stores a Buildkite API Token with read-only scope.  
     model:
@@ -21,5 +21,4 @@ configuration:
       type: string
       description: Additional context to prompt ChatGPT for include in its analysis. 
   required:
-    - api_token_secret_key
-    - bk_token_secret_key
+    - api_key 

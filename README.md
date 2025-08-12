@@ -12,7 +12,7 @@ A Buildkite plugin that allows the user to send a prompt to ChatGPT
 
 - **curl**: For API requests
 - **jq**: For JSON processing
-- **OpenAI API Key**: For sending ChatGPT prompts. Keys can be created from the [OpenAI Platform account](http://platform.openai.com/login)
+- **OpenAI API Key**: For sending ChatGPT prompts. Keys can be created from your [OpenAI Platform account](http://platform.openai.com/login)
 
 ## Quick Start
 1.  Create an OpenAI platform account from [OpenAI account](http://platform.openai.com/login), or log in to an existing one. Generate an OpenAI API Key from the OpenAI dashboard -> View OpenAI Keys menu. 
@@ -27,21 +27,23 @@ A Buildkite plugin that allows the user to send a prompt to ChatGPT
 
 ```
 steps:
-  # Option 1: Using environment variable set at upload time
-  - label: "Generate tests"
-    command: echo "Generate tests"
+  # Option 1: Using environment variable set at upload time 
+  - label: "🔍 Prompt ChatGPT to summarise test results"
+    command: "npm test"
     plugins:
-      - chatgpt-promptere#v1.0.0:
-          api_key: "$$OPENAI_API_KEY"
+      - chatgpt-prompter#v0.0.1:
+          api_key: "$$OPENAI_API_KEY" 
 
   # Option 2: Using Buildkite secrets (recommended)
   # First, create .buildkite/hooks/pre-command with:
-  # export OPENAI_API_KEY=$(buildkite-agent secret get OPENAI_API_KEY)
-  - label: "Run tests"
-    command: echo "Run tests"
+  # export OPENAI_API_KEY=$(buildkite-agent secret get OPENAI_API_KEY) 
+  # export BUILDKITE_API_TOKEN=$(buildkite-agent secret get BUILDKITE_API_TOKEN)   
+  - label: "🔍 Prompt ChatGPT to summarise build"
+    command: echo "Summarise build"
     plugins:
-      - claude-summarize#v1.0.0:
+      - chatgpt-prompter#v0.0.1:
           api_key: "$$OPENAI_API_KEY"
+          buildkite_api_token: "$$BUILDKITE_API_TOKEN" 
 ```
 
 
@@ -65,6 +67,7 @@ The name of the Buildkite secret key that contains your OpenAI API token to use 
 
 The Buildkite API token to use for fetching build information from the Buildkite API to use for build analysis. If not specified, the plugin will look for BUILDKITE_API_TOKEN in the environment.
 
+
 #### `model` (string)
 
 The ChatGPT model. Defaults to `GPT-4o mini`.
@@ -83,8 +86,7 @@ steps:
     command: "npm test"
     plugins:
       - chatgpt-prompter#v0.0.1:
-          api_secret_key_name: "CHATGPT_SECRET_KEY_NAME" 
-          bk_token_secret_key: "ORG_USER_TOKEN_SECRET_KEY_NAME"
+          api_key: "$$OPENAI_API_KEY" 
 ```
 
 ## Provide Aditional Context  
@@ -97,8 +99,8 @@ steps:
     command: "echo template plugin with options"
     plugins:
       - chatgpt-prompter#v0.0.1:
-          api_secret_key_name: "CHATGPT_SECRET_KEY_NAME" 
-          bk_token_secret_key: "ORG_USER_TOKEN_SECRET_KEY_NAME"
+          api_key: "$$OPENAI_API_KEY"
+          buildkite_api_token: "$$BUILDKITE_API_TOKEN"
           model: "GPT-4o"
           custom_prompt: "Focus on build performance and optimization opportunities"
         
