@@ -15,15 +15,21 @@ validate_required_tools || exit 1
 # Get required plugin configurations
 echo "Retrieving OpenAI API Key ..."
 # Read plugin configuration for OpenAI API Key
-API_KEY=$(plugin_read_config API_KEY "")
-# Trim whitespaces from API_KEY
-API_KEY=$(echo "${API_KEY}" | xargs)
+API_KEY_CONFIG=$(plugin_read_config API_KEY "")
+# Evaluate the environment variable if it starts with $
+if [[ "${API_KEY_CONFIG}" =~ ^\$ ]]; then
+  API_KEY=$(eval "echo ${API_KEY_CONFIG}")
+else
+  API_KEY="${API_KEY_CONFIG}"
+fi
+# Trim any whitespace that might be causing issues
+API_KEY=$(echo "$API_KEY" | tr -d '[:space:]')
  
 if [ -z "${API_KEY}" ]; then
   echo '❌ Error: Missing OpenAI API Key. Please set the API_KEY in your plugin configuration.'
   exit 1
 fi  
-validate_api_key "${API_KEY}" || exit 1
+
 
 echo "Retrieving other plugin configurations ..."
 # Load Plugin configuration
@@ -31,10 +37,8 @@ MODEL=$(plugin_read_config MODEL "gpt-4o-mini")
 CUSTOM_PROMPT=$(plugin_read_config CUSTOM_PROMPT "")
 BUILDKITE_API_TOKEN=$(get_bk_api_token)
 
-echo "Using OpenAI API Key: ${API_KEY}"
 echo "Using Model: ${MODEL}"
-echo "Using Custom Prompt: ${CUSTOM_PROMPT:-Default prompt}"
-echo "Using Buildkite API Token: ${BUILDKITE_API_TOKEN:-Not set}"
+echo "Using Custom Prompt: ${CUSTOM_PROMPT:-}"
 
 validate_bk_token "${BUILDKITE_API_TOKEN}" || exit 1
 

@@ -79,28 +79,21 @@ function validate_required_tools() {
 }
 
 function get_bk_api_token() {
-  local bk_token=""
+  local bk_token_config=""
 
-  local bk_token=$(plugin_read_config BUILDKITE_API_TOKEN "")
-  if [ -z "${bk_token}" ]; then
-    echo "${BUILDKITE_API_TOKEN:-}"
+  bk_token_config=$(plugin_read_config BUILDKITE_API_TOKEN "")
+if [[ "${bk_token_config}" =~ ^\$ ]]; then
+    echo "$(eval "echo ${bk_token_config}")"
+    
   else
-    echo "${bk_token}"
+    bk_token=${bk_token_config}
+    if [ -z "${bk_token}" ]; then
+      # the token is not set, so we assume it is not required
+      echo "${BUILDKITE_API_TOKEN:-}"
+    else
+      echo "${bk_token}"
+    fi
   fi
-}
-
-function validate_api_key() {
-  local api_key="$1"
-
-  # Check if the API key is valid
-  if [ -z "${api_key}" ]; then
-    echo "❌ Error: Missing OpenAI API key."
-    return 1
-  fi
-
-  # Optionally, you can add more validation logic here (e.g., checking format)
-  echo "✅ OpenAI API key found."
-  return 0
 }
 
 function validate_bk_token() {
@@ -135,7 +128,6 @@ function validate_bk_token() {
 
   scopes=$(echo "${response}" | jq -r '.scopes[]')   
   if [[ "${scopes}" =~ write ]]; then
-    echo "Scopes: ${scopes}"  
     echo "❌ Error: The Buildkite API token has write permissions which are not allowed to use in this plugin for security reasons."
     return 1
   fi
