@@ -2,6 +2,12 @@
 
 A Buildkite plugin that allows the user to send a prompt to ChatGPT
 
+## Requirements
+
+- **curl**: For API requests
+- **jq**: For JSON processing
+- **OpenAI API Key**: For sending ChatGPT prompts. Keys can be created from the [OpenAI Platform account](http://platform.openai.com/login)
+
 ## Options
 
 These are all the options available to configure this plugin's behaviour.
