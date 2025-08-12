@@ -8,21 +8,62 @@ A Buildkite plugin that allows the user to send a prompt to ChatGPT
 - **jq**: For JSON processing
 - **OpenAI API Key**: For sending ChatGPT prompts. Keys can be created from the [OpenAI Platform account](http://platform.openai.com/login)
 
+## Requirements
+
+- **curl**: For API requests
+- **jq**: For JSON processing
+- **OpenAI API Key**: For sending ChatGPT prompts. Keys can be created from the [OpenAI Platform account](http://platform.openai.com/login)
+
+## Quick Start
+1.  Create an OpenAI platform account from [OpenAI account](http://platform.openai.com/login), or log in to an existing one. Generate an OpenAI API Key from the OpenAI dashboard -> View OpenAI Keys menu. 
+2. Add to your Buildkite environment variable as `OPENAI_API_KEY` 
+3. For Buildkite secrets, create a repository pre-command hook (.buildkite/hooks/pre-command)  and set the environment variable: 
+   ```bash
+   #!/bin/bash
+   export OPENAI_API_KEY=$(buildkite-agent secret get OPENAI_API_KEY) 
+   export BUILDKITE_API_TOKEN=$(buildkite-agent secret get BUILDKITE_API_TOKEN)    
+   ```   
+4. Add the plugin to your pipeline using the following examples
+
+```
+steps:
+  # Option 1: Using environment variable set at upload time
+  - label: "Generate tests"
+    command: echo "Generate tests"
+    plugins:
+      - chatgpt-promptere#v1.0.0:
+          api_key: "$$OPENAI_API_KEY"
+
+  # Option 2: Using Buildkite secrets (recommended)
+  # First, create .buildkite/hooks/pre-command with:
+  # export OPENAI_API_KEY=$(buildkite-agent secret get OPENAI_API_KEY)
+  - label: "Run tests"
+    command: echo "Run tests"
+    plugins:
+      - claude-summarize#v1.0.0:
+          api_key: "$$OPENAI_API_KEY"
+```
+
+
 ## Options
 
 These are all the options available to configure this plugin's behaviour.
 
 ### Required
 
-#### `api_secret_key_name` (string)
+#### `api_key` (string)
 
-The name of the Buildkite secret key that contains your OpenAI API token to use for ChatGPT access. 
+The name of the Buildkite secret key that contains your OpenAI API token to use for ChatGPT access. Use an environment variable reference for this.
 
-#### `bk_token_secret_key` (string)
+- **Environment variable**: `"${OPENAI_API_KEY}"` - References an environment variable set at upload time
+- **Buildkite secrets**: Create `.buildkite/hooks/pre-command` with `export OPENAI_API_KEY=$(buildkite-agent secret get OPENAI_API_KEY)`, then use `"$$OPENAI_API_KEY"` (recommended)
 
-The name of the Buildkite secret key that contains the Buildkite API toke to use for Build analysis. 
 
 ### Optional
+
+#### `buildkite_api_token` (string)
+
+The Buildkite API token to use for fetching build information from the Buildkite API to use for build analysis. If not specified, the plugin will look for BUILDKITE_API_TOKEN in the environment.
 
 #### `model` (string)
 
