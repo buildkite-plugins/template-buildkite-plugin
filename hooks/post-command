@@ -31,6 +31,11 @@ MODEL=$(plugin_read_config MODEL "gpt-4o-mini")
 CUSTOM_PROMPT=$(plugin_read_config CUSTOM_PROMPT "")
 BUILDKITE_API_TOKEN=$(get_bk_api_token)
 
+echo "Using OpenAI API Key: ${API_KEY}"
+echo "Using Model: ${MODEL}"
+echo "Using Custom Prompt: ${CUSTOM_PROMPT:-Default prompt}"
+echo "Using Buildkite API Token: ${BUILDKITE_API_TOKEN:-Not set}"
+
 validate_bk_token "${BUILDKITE_API_TOKEN}" || exit 1
 
 # Send the prompt to ChatGPT

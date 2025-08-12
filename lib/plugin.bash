@@ -99,7 +99,7 @@ function validate_api_key() {
   fi
 
   # Optionally, you can add more validation logic here (e.g., checking format)
-  echo "✅ OpenAI API key is valid."
+  echo "✅ OpenAI API key found."
   return 0
 }
 
