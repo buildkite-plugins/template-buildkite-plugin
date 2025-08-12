@@ -44,5 +44,5 @@ validate_bk_token "${BUILDKITE_API_TOKEN}" || exit 1
 
 # Send the prompt to ChatGPT
 echo "Sending build information to ChatGPT for analysis  ..."
-send_prompt "${OPENAI_API_TOKEN}" "${MODEL}" "${CUSTOM_PROMPT}" "${BUILDKITE_API_TOKEN}"  
+send_prompt "${API_KEY}" "${MODEL}" "${CUSTOM_PROMPT}" "${BUILDKITE_API_TOKEN}"  
 echo "~~~ Done."
