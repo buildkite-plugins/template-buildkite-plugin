@@ -141,11 +141,15 @@ function validate_bk_token() {
   fi 
 
   scopes=$(echo "${response}" | jq -r '.scopes[]')   
-  if [[ "${scopes}" =~ write ]]; then
-    echo "❌ Error: The Buildkite API token has write permissions which are not allowed to use in this plugin for security reasons."
+  
+  # Check if token has required read scopes
+  if [[ ! "${scopes}" =~ read_builds ]] || [[ ! "${scopes}" =~ read_build_logs ]]; then
+    echo "❌ Error: The Buildkite API token does not have the required 'read_builds' and 'read_build_logs' scopes."
+    echo "Current scopes: ${scopes}"
     return 1
   fi
-  echo "✅ Buildkite API token is valid and has appropriate read-only scopes."
+  
+  echo "✅ Buildkite API token is valid."
   return 0
 }
 
