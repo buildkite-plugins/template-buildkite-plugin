@@ -81,17 +81,13 @@ function validate_required_tools() {
 function get_openai_api_key() { 
   local api_key=""
 
-  api_key=$(plugin_read_config API_KEY "OPENAI_API_KEY") 
-  if [[ "${api_key}" =~ ^\$ ]]; then
-    api_key="$(eval "echo ${api_key}")"
-  else
-    api_key="${api_key}"
-    if [ -z "${api_key}" ]; then
-        echo "${OPENAI_API_KEY:-}"
-      else
-        echo "${api_key}"
-    fi
+  api_key=$(plugin_read_config API_KEY "")  
+  if [ -z "${api_key}" ]; then
+      api_key="${OPENAI_API_KEY:-}"
+    else
+      api_key="${api_key}"
   fi
+
   # Trim any whitespace that might be causing issues
   api_key=$(echo "$api_key" | tr -d '[:space:]')
   echo "${api_key}"
@@ -101,17 +97,15 @@ function get_bk_api_token() {
   local bk_token=""
 
   bk_token=$(plugin_read_config BUILDKITE_API_TOKEN "")
-  if [[ "${bk_token}" =~ ^\$ ]]; then
-    echo "$(eval "echo ${bk_token}")" 
+  if [ -z "${bk_token}" ]; then
+    # the token is not set, so we assume it is not required
+    bk_token="${BUILDKITE_API_TOKEN:-}"
   else
-    bk_token=${bk_token}
-    if [ -z "${bk_token}" ]; then
-      # the token is not set, so we assume it is not required
-      echo "${BUILDKITE_API_TOKEN:-}"
-    else
-      echo "${bk_token}"
-    fi
+    bk_token="${bk_token}"
   fi
+  # Trim any whitespace that might be causing issues
+  bk_token=$(echo "$bk_token" | tr -d '[:space:]')
+  echo "${bk_token}"
 }
 
 function validate_bk_token() {

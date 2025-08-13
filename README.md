@@ -54,11 +54,7 @@ steps:
 
 The environment variable that the OpenAI API key is stored in. Defaults to using `OPENAI_API_KEY`. The recommended approach for storing your API key is to use [Buildkite Secrets](https://buildkite.com/docs/pipelines/security/secrets/buildkite-secrets).
 
-- **Environment variable**: `"${OPENAI_API_KEY}"` - References an environment variable set at upload time
-- **Buildkite secrets**: Create `.buildkite/hooks/pre-command` with `export OPENAI_API_KEY=$(buildkite-agent secret get OPENAI_API_KEY)`, then use `"$$OPENAI_API_KEY"` (recommended)
-
 The plugin will fail if no OpenAI key is set. 
-
 
 #### `buildkite_api_token` (string)
 
@@ -74,17 +70,6 @@ Additional context to include in ChatGPT's analysis.
 
 ## Examples
 
-### Basic Usage - Analyse Build
-
-```yaml
-steps:
-  - label: "🔍 Prompt ChatGPT to summarise build"
-    command: "npm test"
-    plugins:
-      - chatgpt-prompter#v0.0.1:
-          api_key: "$$OTHER_OPENAI_API_KEY" 
-```
-
 ## Provide Additional Context  
 
 If you want to provide additional context or instructions to the default build summary, provide a `custom_prompt` parameter to the plugin. 
@@ -95,9 +80,9 @@ steps:
     command: "echo template plugin with options"
     plugins:
       - chatgpt-prompter#v0.0.1:
-          api_key: "$$OTHER_OPENAI_API_TOKEN"
-          buildkite_api_token: "$$OTHER_BUILDKITE_API_TOKEN"
-          model: "GPT-4o"
+          api_key: "$OTHER_OPENAI_API_TOKEN"
+          buildkite_api_token: "$OTHER_BUILDKITE_API_TOKEN"
+          model: "gpt-3.5-turbo"
           custom_prompt: "Focus on build performance and optimization opportunities"
         
 ```

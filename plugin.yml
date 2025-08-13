@@ -8,10 +8,10 @@ configuration:
   properties:
     api_key:
       type: string
-      description: The Buildkite Secret key name that stores the OpenAI API Key to use for ChatGPT access.  
+      description: The environment variable that the OpenAI API key is stored in.  
     buildkite_api_token:
       type: string
-      description: The Buildkite Secret key name that stores a Buildkite API Token with read-only scope.  
+      description: The environment variable that the Buildkite API Token is stored in.  
     model:
       type: string
       description: ChatGPT model to use.
