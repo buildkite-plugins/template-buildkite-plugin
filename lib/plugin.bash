@@ -61,18 +61,128 @@ function plugin_read_config() {
   echo "${!var:-$default}"
 }
 
+function validate_required_tools() { 
+  local errors=0
+
+  # Check if required tools are installed
+  if ! command -v jq &> /dev/null; then
+    echo "❌ Error: jq is not installed. Please install jq to parse JSON responses." >&2
+    errors=$((errors + 1))
+  fi
+
+  if ! command -v curl &> /dev/null; then
+    echo "❌ Error: curl is not installed. Please install curl to make API requests." >&2
+    errors=$((errors + 1))
+  fi
+
+  return ${errors}
+}
+
+function get_openai_api_key() {
+  local api_key_config=""
+
+  api_key_config=$(plugin_read_config API_KEY "")
+  if [[ "${api_key_config}" =~ ^\$ ]]; then
+    api_key_config="$(eval "echo ${api_key_config}")"
+  else
+    api_key_config="${api_key_config}"
+  fi
+  # Trim any whitespace that might be causing issues
+  api_key_config=$(echo "$api_key_config" | tr -d '[:space:]')
+  echo "${api_key_config}"
+}
+
+function get_bk_api_token() {
+  local bk_token_config=""
+
+  bk_token_config=$(plugin_read_config BUILDKITE_API_TOKEN "")
+  if [[ "${bk_token_config}" =~ ^\$ ]]; then
+    echo "$(eval "echo ${bk_token_config}")"
+    
+  else
+    bk_token=${bk_token_config}
+    if [ -z "${bk_token}" ]; then
+      # the token is not set, so we assume it is not required
+      echo "${BUILDKITE_API_TOKEN:-}"
+    else
+      echo "${bk_token}"
+    fi
+  fi
+}
+
+function validate_bk_token() {
+  local bk_api_token="$1" 
+
+  # Check if the BK API token is valid
+  if [ -z "${bk_api_token}" ]; then
+    # the token is not set, so we assume it is not required
+    return 0
+  fi
+
+  #validate token scope
+  response=$(curl -H "Authorization: Bearer ${bk_api_token}" \
+    -X GET "https://api.buildkite.com/v2/access-token")
+  
+  #check if response is 200
+  if [ $? -ne 0 ]; then
+    echo "❌ Error: Invalid Buildkite API token." 
+    return 1
+  fi
+
+  #check if response is empty
+  if [ -z "${response}" ]; then
+    echo "❌ Error: Failed to validate the Buildkite API token provided."
+    return 1
+  fi
+
+  if ! echo "${response}" | jq -e '.scopes' > /dev/null; then
+    echo "❌ Error: Failed to validate the scope of the Buildkite API token provided."
+    return 1
+  fi 
+
+  scopes=$(echo "${response}" | jq -r '.scopes[]')   
+  if [[ "${scopes}" =~ write ]]; then
+    echo "❌ Error: The Buildkite API token has write permissions which are not allowed to use in this plugin for security reasons."
+    return 1
+  fi
+  echo "✅ Buildkite API token is valid and has appropriate read-only scopes."
+  return 0
+}
+
+function get_current_build_information() {  
+  local bk_api_token="$1"
+  
+  # Fetch build information from Buildkite API
+  response=$(curl -s -f -X GET "https://api.buildkite.com/v2/organizations/${BUILDKITE_ORGANIZATION_SLUG}/pipelines/${BUILDKITE_PIPELINE_SLUG}/builds/${BUILDKITE_BUILD_NUMBER}" \
+    -H "Authorization: Bearer ${bk_api_token}" \
+    -H "Content-Type: application/json" 2>/dev/null) 
+
+  # Check if curl failed
+  if [ $? -ne 0 ]; then
+    echo ""
+    return
+  fi
+  echo "${response}"
+}
+ 
 function send_prompt() {
   local api_secret_key="$1"
   local model="$2"
   local user_prompt="$3"
-  local system_prompt="$4"
+  local buildkite_api_token="$4"
+  
+  local content=$(get_user_content "${buildkite_api_token}")
+  if [ -z "${content}" ]; then
+    echo "❌ Error: Failed to generate build or step level information for analysis."
+    return 1
+  fi
 
   local prompt_payload
   #check if user_prompt is equal to "ping"
   if [ "${user_prompt}" == "ping" ]; then
     prompt_payload=$(ping_payload "${model}")
   else
-    prompt_payload=$(format_payload "${model}" "${user_prompt}" "${system_prompt}")
+    prompt_payload=$(format_payload "${model}" "${user_prompt}" "${content}")
   fi
   # Call the OpenAI API
   response=$(call_openapi_chatgpt "${api_secret_key}"  "${prompt_payload}")
@@ -106,12 +216,6 @@ function send_prompt() {
 
 function validate_and_process_response() {
   local response="$1"
-  
-  # Check if jq is available
-  if ! command -v jq &> /dev/null; then
-    echo "❌ Error: jq is not installed. Please install jq to parse the response from OpenAI API."
-    return 1
-  fi
   
   # Check if response is empty
   if [ -z "${response}" ]; then
@@ -173,34 +277,43 @@ function call_openapi_chatgpt() {
 
 function format_payload() {
   local model="$1"
-  local user_prompt="$2"
-  local system_prompt="$3"
+  local custom_prompt="$2"
+  local user_content="$3"
+  local base_prompt="You are an expert software engineer and DevOps specialist specialising in Buildkite. Please provide a detailed analysis of the build information provided."
 
   local payload
-  if [ -z "${system_prompt}" ]; then
-      # Prepare the payload without system prompt
-      payload=$(jq -n \
-        --arg model "$model" \
-        --arg user_prompt "$user_prompt" \
-        '{
-          model: $model,
-          messages: [
-            { role: "user", content: $user_prompt }
-          ] 
-        }')
-    else
-      # Prepare the payload with system prompt
-      payload=$(jq -n \
-        --arg model "$model" \
-        --arg user_prompt "$user_prompt" \
-        --arg system_prompt "$system_prompt" \
-        '{
-          model: $model,
-          messages: [
-            { role: "system", content: $system_prompt },
-            { role: "user", content: $user_prompt }
-          ]
-        }')
-    fi
+  # check if user prompt is not empty, append to default prompt "you are an expert."  
+  if [ -n "${custom_prompt}" ]; then
+      base_prompt="${base_prompt} ${custom_prompt}"
+  fi 
+
+  # Prepare the payload with prompt
+  payload=$(jq -n \
+    --arg model "$model" \
+    --arg system_prompt "$base_prompt" \
+    --arg user_content "$user_content" \
+     '{
+      model: $model,
+      messages: [
+        { role: "system", content: $system_prompt },
+        { role: "user", content: $user_content }
+      ]
+    }') 
+
     echo "$payload"
+}
+
+function get_user_content() {
+  local bk_api_token="$1"
+
+ local content=""
+  # Check if Buildkite API token is provided
+  if [ -z "${bk_api_token}" ]; then
+     # Default to a step level or command step to be passed for prompt analysis
+     content=$(echo "Generating content from current step information ...")
+  else
+    # Get current build information from Buildkite API
+    content=$(get_current_build_information "${bk_api_token}")   
+  fi 
+  echo "${content}"
 }
