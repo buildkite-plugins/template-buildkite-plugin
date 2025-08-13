@@ -19,6 +19,4 @@ configuration:
       default: gpt-4o-mini 
     custom_prompt:
       type: string
-      description: Additional context to prompt ChatGPT for include in its analysis. 
-  required:
-    - api_key 
+      description: Additional context to prompt ChatGPT for include in its analysis.

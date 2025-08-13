@@ -81,7 +81,7 @@ function validate_required_tools() {
 function get_openai_api_key() {
   local api_key_config=""
 
-  api_key_config=$(plugin_read_config API_KEY "")
+  api_key_env=$(plugin_read_config API_KEY_ENV "OPENAI_API_KEY") 
   if [[ "${api_key_config}" =~ ^\$ ]]; then
     api_key_config="$(eval "echo ${api_key_config}")"
   else
