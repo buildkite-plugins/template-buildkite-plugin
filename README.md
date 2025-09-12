@@ -48,79 +48,113 @@ Timeout value in seconds. Must be between 1 and 60 seconds.
 
 ## Examples
 
-Show how your plugin is to be used
+### Basic Usage
+
+Minimal configuration with just the required option:
 
 ```yaml
 steps:
-  - label: "🔨 Running plugin"
-    command: "echo template plugin"
+  - label: "🔨 Basic plugin usage"
+    command: "echo processing"
     plugins:
       - template#v1.0.0:
-          mandatory: "value"
+          mandatory: "required-value"
 ```
 
-## And with other options as well
+### With Optional Parameters
 
-If you want to change the plugin behaviour:
+Adding optional configuration:
 
 ```yaml
 steps:
-  - label: "🔨 Running plugin"
-    command: "echo template plugin with options"
+  - label: "🔨 Plugin with options"
+    command: "echo processing with options"
     plugins:
       - template#v1.0.0:
-          mandatory: "value"
-          optional: "example"
+          mandatory: "required-value"
+          optional: "custom-value"
+          timeout: 45
 ```
+
+### Array Processing
+
+Handling arrays of values:
 
 ```yaml
 steps:
   - label: "🔨 Array processing"
-    command: "echo processing array"
+    command: "echo processing numbers"
     plugins:
       - template#v1.0.0:
-          mandatory: "value"
+          mandatory: "required-value"
           numbers: [1, 2, 3, 5, 8]
 ```
 
-```yaml
-steps:
-  - label: "🔨 Feature toggle"
-    command: "echo feature processing"
-    plugins:
-      - template#v1.0.0:
-          mandatory: "value"
-          enabled: true
-```
+### Feature Toggles
+
+Using boolean flags to control behavior:
 
 ```yaml
 steps:
-  - label: "🔨 Configuration"
-    command: "echo processing config"
+  - label: "🔨 Feature enabled"
+    command: "echo enhanced processing"
     plugins:
       - template#v1.0.0:
-          mandatory: "value"
+          mandatory: "required-value"
+          enabled: true
+```
+
+### Complex Configuration
+
+Using nested configuration objects:
+
+```yaml
+steps:
+  - label: "🔨 Complex config"
+    command: "echo connecting to service"
+    plugins:
+      - template#v1.0.0:
+          mandatory: "required-value"
           config:
-            host: "example.com"
+            host: "api.example.com"
             port: 8080
             ssl: false
 ```
 
+### Environment Variables
+
+Referencing secrets and environment variables:
+
 ```yaml
 steps:
-  - label: "🔨 Timeout handling"
-    command: "echo processing with timeout"
+  - label: "🔨 Using secrets"
+    command: "echo authenticated processing"
     plugins:
       - template#v1.0.0:
-          mandatory: "value"
+          mandatory: "$SECRET_VALUE" # References environment variable
           timeout: 30
+```
+
+### Debug Mode
+
+Enabling verbose logging for troubleshooting:
+
+```yaml
+steps:
+  - label: "🔨 Debug mode"
+    command: "echo detailed processing"
+    plugins:
+      - template#v1.0.0:
+          mandatory: "required-value"
+    env:
+      BUILDKITE_PLUGIN_DEBUG: "true"
 ```
 
 ## Compatibility
 
 | Elastic Stack | Agent Stack K8s | Hosted (Mac) | Hosted (Linux) | Notes |
-| :-----------: | :-------------: | :----: | :----: |:---- |
-| ? | ? | ? | ? | n/a |
+| :-----------: | :-------------: | :----------: | :------------: | :---- |
+|       ?       |        ?        |      ?       |       ?        | n/a   |
 
 - ✅ Fully supported (all combinations of attributes have been tested to pass)
 - ⚠️ Partially supported (some combinations cause errors/issues)
@@ -128,21 +162,58 @@ steps:
 
 ## 👩‍💻 Contributing
 
-Your policy on how to contribute to the plugin!
+1. Follow the patterns established in this template
+2. Add tests for new functionality
+3. Update documentation for any new options
+4. Ensure shellcheck passes
+5. Test with the plugin tester
+
+## Architecture
+
+This template demonstrates modern plugin architecture:
+
+- **`hooks/environment`**: Early validation and setup
+- **`hooks/command`**: Main execution logic
+- **`lib/shared.bash`**: Common utilities and logging
+- **`lib/plugin.bash`**: Configuration reading helpers
+- **`lib/modules/`**: Optional feature modules for complex plugins
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development guidelines.
 
 ## Developing
 
-To run testing, shellchecks, and plugin linting, use `bk run` with the [Buildkite CLI](https://github.com/buildkite/cli):
+**Run all tests:**
+
+```bash
+docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-tester
+```
+
+**Validate plugin structure:**
+
+```bash
+# Replace 'your-plugin-name' with your actual plugin name
+docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id your-plugin-name --path /plugin
+```
+
+**Run shellcheck:**
+
+```bash
+shellcheck hooks/* tests/* lib/*
+```
+
+**Run full pipeline locally** with the [Buildkite CLI](https://github.com/buildkite/cli):
 
 ```bash
 bk run
 ```
 
-Alternatively, to run just the tests, you can use the [Buildkite Plugin Tester](https://github.com/buildkite-plugins/buildkite-plugin-tester):
+### Getting Started
 
-```bash
-docker run --rm -ti -v "${PWD}":/plugin buildkite/plugin-tester:latest
-```
+1. **Update plugin name**: Change `YOUR_PLUGIN_NAME` in `lib/plugin.bash`
+2. **Customize configuration**: Modify `plugin.yml` for your options
+3. **Add your logic**: Implement features in `hooks/command`
+4. **Use modules**: For complex plugins, add modules in `lib/modules/`
+5. **Test thoroughly**: Add tests in `tests/` directory
 
 ## 📜 License
 

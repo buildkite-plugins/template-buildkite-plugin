@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/shared.bash
+. "$DIR/../lib/shared.bash"
+
+# shellcheck source=lib/plugin.bash
+. "$DIR/../lib/plugin.bash"
+
+main() {
+  echo "--- :gear: Setting up plugin environment"
+
+  # Enable debug mode early if requested
+  enable_debug_if_requested
+
+  # Check required dependencies (example: uncomment and modify as needed)
+  # check_dependencies docker curl
+
+  # Validate required configuration
+  local mandatory_option
+  mandatory_option=$(plugin_read_config MANDATORY "")
+  validate_required_config "mandatory option" "${mandatory_option}"
+
+  log_info "Plugin environment setup completed"
+  log_info "Mandatory option: ${mandatory_option}"
+
+  # Export any environment variables needed for subsequent hooks
+  export PLUGIN_MANDATORY_OPTION="${mandatory_option}"
+}
+
+main "$@"
+
