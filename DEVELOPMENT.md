@@ -144,7 +144,7 @@ docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id your-plugi
 **ShellCheck** - Static analysis for shell scripts:
 
 ```bash
-shellcheck hooks/* tests/* lib/*
+shellcheck hooks/* tests/* lib/*.bash
 ```
 
 ### Unit testing with BATS

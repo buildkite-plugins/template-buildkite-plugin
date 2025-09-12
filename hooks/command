@@ -39,8 +39,6 @@ validate_timeout() {
 }
 
 main() {
-  echo "--- :hammer: Running plugin"
-
   # Enable debug mode early if not already enabled in environment hook
   enable_debug_if_requested
 
@@ -58,6 +56,8 @@ main() {
   # Validate configuration
   validate_numbers_array
   validate_timeout
+  
+  echo "--- :hammer: Running plugin"
 
   log_info "Running plugin with options:"
   log_info "mandatory: ${mandatory_option}"

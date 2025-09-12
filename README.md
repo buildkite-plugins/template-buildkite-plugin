@@ -170,8 +170,6 @@ steps:
 
 ## Architecture
 
-This template demonstrates modern plugin architecture:
-
 - **`hooks/environment`**: Early validation and setup
 - **`hooks/command`**: Main execution logic
 - **`lib/shared.bash`**: Common utilities and logging
@@ -198,13 +196,7 @@ docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id your-plugi
 **Run shellcheck:**
 
 ```bash
-shellcheck hooks/* tests/* lib/*
-```
-
-**Run full pipeline locally** with the [Buildkite CLI](https://github.com/buildkite/cli):
-
-```bash
-bk run
+shellcheck hooks/* tests/* lib/*.bash
 ```
 
 ### Getting Started
