@@ -42,7 +42,8 @@ validate_timeout() {
 }
 
 main() {
-  # Enable debug mode if requested
+  # Set up error reporting and debug mode
+  setup_error_trap
   enable_debug_if_requested
 
   # Get configuration

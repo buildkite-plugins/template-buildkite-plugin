@@ -77,6 +77,11 @@ is_debug_mode() {
   [[ "${BUILDKITE_PLUGIN_DEBUG:-false}" =~ (true|on|1) ]]
 }
 
+# Usage: setup_error_trap (call early in your hook scripts)
+setup_error_trap() {
+  trap 'log_error "Command failed with exit status $? at line $LINENO: $BASH_COMMAND"' ERR
+}
+
 # Usage: enable_debug_if_requested (call early in your hook scripts)
 enable_debug_if_requested() {
   if is_debug_mode; then

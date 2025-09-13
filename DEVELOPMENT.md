@@ -70,6 +70,25 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 - **`-u`**: Exit on undefined variables
 - **`-o pipefail`**: Fail on any command in a pipeline
 
+### Use error traps for failure reporting
+
+Always add error traps to show where failures occur:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# Load shared utilities
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/shared.bash"
+
+# Set up error reporting early
+setup_error_trap
+
+# Your plugin logic here
+```
+
+This provides essential debugging information for both developers and users when plugins fail unexpectedly.
+
 ### Validation early and often
 
 ```bash
