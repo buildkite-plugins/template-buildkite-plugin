@@ -164,8 +164,8 @@ Test full plugin execution with realistic scenarios:
 @test "handles missing dependencies gracefully" {
   # Mock missing command
   run hooks/command
-  [ "$status" -eq 1 ]
-  [[ "$output" =~ "Missing required dependencies" ]]
+  assert_failure
+  assert_output --partial "Missing required dependencies"
 }
 ```
 
