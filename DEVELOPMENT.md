@@ -8,18 +8,18 @@ This guide covers best practices for developing Buildkite plugins, with examples
 
 For plugins with <100 lines of logic:
 
-- Keep everything in `hooks/command` and `lib/plugin.bash`
-- Use shared utilities from `lib/shared.bash`
+- Keep logic in appropriate hook files (`hooks/command`, `hooks/pre-command`, etc.)
+- Use shared utilities from `lib/shared.bash` and `lib/plugin.bash`
 - Skip complex directory structures
 
 ### When to use modular structure
 
 Consider modules when having:
 
+- **Complex shared logic** across multiple hooks
 - **Distinct feature areas** (auth, deploy, notify)
-- **Reusable components** across multiple hooks
-- **>200 lines** of logic in a single file
 - **Provider-specific logic** (AWS vs GCP vs Azure implementations)
+- **>200 lines** of logic in a single file
 
 For provider-specific handling, create separate modules like `lib/modules/aws.bash`, `lib/modules/gcp.bash`, etc.
 
@@ -56,6 +56,19 @@ export PLUGIN_API_TOKEN="${api_token}"
 - **Pre-exit**: Cleanup operations (guaranteed to run even on cancellation)
 
 ## Error handling best practices
+
+### Use strict error handling
+
+Always use bash strict mode to catch errors early:
+
+```bash
+#!/bin/bash
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+```
+
+- **`-e`**: Exit immediately if any command fails
+- **`-u`**: Exit on undefined variables
+- **`-o pipefail`**: Fail on any command in a pipeline
 
 ### Validation early and often
 
