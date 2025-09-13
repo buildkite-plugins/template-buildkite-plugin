@@ -151,8 +151,8 @@ Test individual functions:
 @test "validates required config" {
   export BUILDKITE_PLUGIN_MYPLUGIN_API_TOKEN=""
   run validate_required_config "API token" "${BUILDKITE_PLUGIN_MYPLUGIN_API_TOKEN}"
-  [ "$status" -eq 1 ]
-  [[ "$output" =~ "API token is required" ]]
+  assert_failure 1  # ensure it fails with exit code 1
+  assert_output --partial "API token is required"
 }
 ```
 
