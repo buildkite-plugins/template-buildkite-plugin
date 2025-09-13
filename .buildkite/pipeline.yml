@@ -16,4 +16,3 @@ steps:
           files:
             - hooks/**
             - lib/*.bash
-

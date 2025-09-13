@@ -46,9 +46,27 @@ Whether to use SSL/TLS for the connection. Defaults to `true`.
 
 Timeout value in seconds. Must be between 1 and 60 seconds.
 
+## Architecture
+
+- **`hooks/command`**: Main execution logic
+- **`lib/shared.bash`**: Common utilities and logging
+- **`lib/plugin.bash`**: Configuration reading helpers
+- **`lib/modules/`**: Optional feature modules for complex plugins
+- **`hooks/environment`**: Optional early setup (for complex plugins only)
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development guidelines.
+
+## Getting started
+
+1. **Update plugin name**: Change `YOUR_PLUGIN_NAME` in `lib/plugin.bash`
+2. **Customize configuration**: Modify `plugin.yml` for your options
+3. **Add your logic**: Implement features in `hooks/command`
+4. **Use modules**: For complex plugins, add modules in `lib/modules/`
+5. **Test thoroughly**: Add tests in `tests/` directory
+
 ## Examples
 
-### Basic Usage
+### Basic usage
 
 Minimal configuration with just the required option:
 
@@ -61,7 +79,7 @@ steps:
           mandatory: "required-value"
 ```
 
-### With Optional Parameters
+### With optional parameters
 
 Adding optional configuration:
 
@@ -76,7 +94,7 @@ steps:
           timeout: 45
 ```
 
-### Array Processing
+### Array processing
 
 Handling arrays of values:
 
@@ -90,7 +108,7 @@ steps:
           numbers: [1, 2, 3, 5, 8]
 ```
 
-### Feature Toggles
+### Feature toggles
 
 Using boolean flags to control behavior:
 
@@ -104,7 +122,7 @@ steps:
           enabled: true
 ```
 
-### Complex Configuration
+### Complex configuration
 
 Using nested configuration objects:
 
@@ -121,21 +139,24 @@ steps:
             ssl: false
 ```
 
-### Environment Variables
+### Secrets and environment variables
 
-Referencing secrets and environment variables:
+Secure handling of secrets using the secrets plugin:
 
 ```yaml
 steps:
   - label: "🔨 Using secrets"
     command: "echo authenticated processing"
     plugins:
+      - secrets#v1.0.0:
+          variables:
+            API_TOKEN: API_TOKEN
       - template#v1.0.0:
-          mandatory: "$SECRET_VALUE" # References environment variable
+          mandatory: $$API_TOKEN
           timeout: 30
 ```
 
-### Debug Mode
+### Debug mode
 
 Enabling verbose logging for troubleshooting:
 
@@ -165,18 +186,8 @@ steps:
 1. Follow the patterns established in this template
 2. Add tests for new functionality
 3. Update documentation for any new options
-4. Ensure shellcheck passes
+4. Ensure shellcheck passes (fix issues, don't just disable checks)
 5. Test with the plugin tester
-
-## Architecture
-
-- **`hooks/environment`**: Early validation and setup
-- **`hooks/command`**: Main execution logic
-- **`lib/shared.bash`**: Common utilities and logging
-- **`lib/plugin.bash`**: Configuration reading helpers
-- **`lib/modules/`**: Optional feature modules for complex plugins
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development guidelines.
 
 ## Developing
 
@@ -198,14 +209,6 @@ docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id your-plugi
 ```bash
 shellcheck hooks/* tests/* lib/*.bash
 ```
-
-### Getting Started
-
-1. **Update plugin name**: Change `YOUR_PLUGIN_NAME` in `lib/plugin.bash`
-2. **Customize configuration**: Modify `plugin.yml` for your options
-3. **Add your logic**: Implement features in `hooks/command`
-4. **Use modules**: For complex plugins, add modules in `lib/modules/`
-5. **Test thoroughly**: Add tests in `tests/` directory
 
 ## 📜 License
 

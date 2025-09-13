@@ -57,36 +57,6 @@ validate_required_config() {
   fi
 }
 
-# Usage: token=$(expand_env_var "$BUILDKITE_PLUGIN_MYPLUGIN_TOKEN" "token")
-# Handles values like "$MY_SECRET_TOKEN" by expanding the environment variable
-expand_env_var() {
-  local raw_value="$1"
-  local param_name="$2"
-  local result
-
-  # shellcheck disable=SC2016
-  case "${raw_value}" in
-  '$'*)
-    local var_name="${raw_value#$}"
-    if [[ -v "${var_name}" ]]; then
-      result="${!var_name}"
-      if [[ -z "$result" ]]; then
-        log_error "Environment variable '${var_name}' referenced by ${param_name} parameter is empty or not set"
-        exit 1
-      fi
-    else
-      log_error "Environment variable '${var_name}' referenced by ${param_name} parameter is empty or not set"
-      exit 1
-    fi
-    ;;
-  *)
-    result="${raw_value}"
-    ;;
-  esac
-
-  echo "$result"
-}
-
 # Usage: run_command "Pushing image to registry" docker push my-image:latest
 run_command() {
   local description="$1"
@@ -114,4 +84,3 @@ enable_debug_if_requested() {
     set -x
   fi
 }
-

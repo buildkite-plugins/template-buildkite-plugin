@@ -19,23 +19,21 @@ Consider modules when having:
 - **Distinct feature areas** (auth, deploy, notify)
 - **Reusable components** across multiple hooks
 - **>200 lines** of logic in a single file
+- **Provider-specific logic** (AWS vs GCP vs Azure implementations)
 
-Consider providers when having:
-
-- **Multiple cloud providers** (AWS, GCP, Azure)
-- **Different backends** (various registries, APIs, services)
-- **Provider-specific logic** with unique authentication/configuration
+For provider-specific handling, create separate modules like `lib/modules/aws.bash`, `lib/modules/gcp.bash`, etc.
 
 ## Hook pattern usage
 
 ### Environment hook (`hooks/environment`)
 
-**Use for:**
+**Use for complex plugins only:**
 
-- Early validation of required configuration
-- Dependency checking (`check_dependencies docker aws`)
-- Setting up environment variables for later hooks
-- Authentication setup that persists across hooks
+- Expensive dependency checking that should run once (`check_dependencies docker aws`)
+- Authentication setup that persists across multiple hooks
+- Setting up environment variables shared between pre-command, command, and post-command hooks
+
+**Note**: Most plugins don't need an environment hook. Use `hooks/command` for simple validation and execution.
 
 ```bash
 # Example: Early validation prevents later failures
@@ -54,7 +52,8 @@ export PLUGIN_API_TOKEN="${api_token}"
 ### Other hooks
 
 - **Pre-command**: Setup that affects the main command
-- **Post-command**: Cleanup, reporting, artifact handling
+- **Post-command**: Reporting, artifact handling (success path only)
+- **Pre-exit**: Cleanup operations (guaranteed to run even on cancellation)
 
 ## Error handling best practices
 
@@ -74,12 +73,17 @@ fi
 
 ### Descriptive error messages
 
+Use the provided logging helpers for consistent output:
+
 ```bash
 # Bad
-log_error "Authentication failed"
+echo "Error: Authentication failed" >&2
 
-# Good
+# Good - use logging helpers with descriptive messages
 log_error "Failed to authenticate with registry ${registry_url}. Check your credentials and network connectivity."
+log_warning "AWS CLI not found, trying docker login directly"
+log_info "Processing ${image_count} images"
+log_success "All images pushed successfully"
 ```
 
 ### Graceful degradation
@@ -93,14 +97,6 @@ fi
 ```
 
 ## Configuration handling
-
-### Environment variables
-
-Handle `$VARIABLE_NAME` references in configuration:
-
-```bash
-token=$(expand_env_var "${raw_token}" "api-token")
-```
 
 ### Required vs optional
 
@@ -214,13 +210,16 @@ if [[ ! "${region}" =~ ^[a-z0-9-]+$ ]]; then
 fi
 ```
 
-### Use environment variables for secrets
+### Use secure secret handling
 
 ```yaml
-# In pipeline
+# In pipeline - use secrets plugin with $$VARIABLE references
 plugins:
+  - secrets#v1.0.0:
+      variables:
+        SECRET_API_TOKEN: SECRET_API_TOKEN
   - myplugin#v1.0.0:
-      api-token: "$SECRET_API_TOKEN" # Reference env var
+      api-token: $$SECRET_API_TOKEN
 ```
 
 ## Debugging support
@@ -243,10 +242,4 @@ log_success "All images pushed successfully"
 
 ## Documentation
 
-### README examples
-
-Show progression from simple to complex:
-
-1. Minimal required configuration
-2. Common use cases with optional parameters
-3. Advanced scenarios with full configuration
+Keep README examples simple and focused. Show the most common use cases clearly rather than trying to cover every scenario.

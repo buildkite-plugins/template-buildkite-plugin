@@ -34,7 +34,7 @@ function plugin_read_list() {
   prefix_read_list "BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
 }
 
-# Usage: if plugin_read_list_into_result NUMBERS; then process_numbers "${result[@]}"; fi
+# Usage: prefix_read_list_into_result "BUILDKITE_PLUGIN_MYPLUGIN_TAGS"
 # Populates global 'result' array, returns success if any values found
 function prefix_read_list_into_result() {
   local prefix="$1"
@@ -56,7 +56,8 @@ function prefix_read_list_into_result() {
   [ ${#result[@]} -gt 0 ] || return 1
 }
 
-# Usage: if plugin_read_list_into_result TAGS; then echo "Found ${#result[@]} tags"; fi
+# Usage: if plugin_read_list_into_result NUMBERS; then process_numbers "${result[@]}"; fi
+# Populates global 'result' array with plugin config values, returns success if any values found
 function plugin_read_list_into_result() {
   prefix_read_list_into_result "BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
 }

@@ -10,6 +10,9 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/plugin.bash
 . "$DIR/../lib/plugin.bash"
 
+# Global variable used by plugin_read_list_into_result
+result=()
+
 # Optional: Load feature modules for complex plugins
 # shellcheck source=lib/modules/example.bash
 # . "$DIR/../lib/modules/example.bash"
@@ -39,24 +42,21 @@ validate_timeout() {
 }
 
 main() {
-  # Enable debug mode early if not already enabled in environment hook
+  # Enable debug mode if requested
   enable_debug_if_requested
 
-  # Get configuration (environment hook should have validated mandatory options)
-  local mandatory_option="${PLUGIN_MANDATORY_OPTION:-}"
+  # Get configuration
+  local mandatory_option
+  mandatory_option=$(plugin_read_config MANDATORY "")
+  validate_required_config "mandatory option" "${mandatory_option}"
+
   local optional_option
   optional_option=$(plugin_read_config OPTIONAL "default")
-
-  # Fallback validation if environment hook wasn't used
-  if [[ -z "${mandatory_option}" ]]; then
-    mandatory_option=$(plugin_read_config MANDATORY "")
-    validate_required_config "mandatory option" "${mandatory_option}"
-  fi
 
   # Validate configuration
   validate_numbers_array
   validate_timeout
-  
+
   echo "--- :hammer: Running plugin"
 
   log_info "Running plugin with options:"

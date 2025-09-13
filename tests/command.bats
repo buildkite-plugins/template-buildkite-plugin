@@ -15,7 +15,7 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
+  assert_failure 1
   assert_output --partial 'mandatory option is required but not provided'
   refute_output --partial 'Running plugin'
 }
@@ -90,7 +90,7 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
+  assert_failure 1
   assert_output --partial 'timeout must be between 1 and 60 seconds'
   refute_output --partial 'Running plugin with options'
 }
@@ -100,7 +100,7 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
+  assert_failure 1
   assert_output --partial 'timeout must be between 1 and 60 seconds'
   refute_output --partial 'Running plugin with options'
 }
@@ -150,7 +150,7 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
+  assert_failure 1
   assert_output --partial 'numbers array contains non-numeric value: abc'
   refute_output --partial 'Running plugin with options'
 }
