@@ -63,9 +63,11 @@ function plugin_read_list_into_result() {
 }
 
 # Usage: timeout=$(plugin_read_config TIMEOUT "30")
-# Gets plugin config value with optional default
+# Gets plugin config value with optional default, expands $$VARIABLE references
 function plugin_read_config() {
   local var="BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}"
   local default="${2:-}"
-  echo "${!var:-$default}"
+  local raw_value="${!var:-$default}"
+
+  expand_env_var "$raw_value" "$1"
 }

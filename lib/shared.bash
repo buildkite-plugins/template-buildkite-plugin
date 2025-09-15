@@ -24,6 +24,13 @@ log_error() {
   echo "[ERROR]: $*" >&2
 }
 
+# Usage: log_debug "Processing configuration file"
+log_debug() {
+  if is_debug_mode; then
+    echo "[DEBUG]: $*" >&2
+  fi
+}
+
 # Usage: if command_exists docker; then echo "Docker available"; fi
 command_exists() {
   command -v "$1" >/dev/null 2>&1
@@ -88,4 +95,48 @@ enable_debug_if_requested() {
     log_info "Debug mode enabled"
     set -x
   fi
+}
+
+# Usage: expand_env_var "$$SECRET_API_TOKEN" "api-token" [--require-set] [--require-non-empty]
+# Expands $$VARIABLE references to their environment variable values
+# By default allows unset/empty variables, use flags for stricter validation
+expand_env_var() {
+  local raw_value="$1"
+  local param_name="$2"
+  local require_set=false
+  local require_non_empty=false
+
+  # Parse optional flags
+  shift 2
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+    --require-set) require_set=true ;;
+    --require-non-empty) require_non_empty=true ;;
+    esac
+    shift
+  done
+
+  case "${raw_value}" in
+  '$$'*)
+    local var_name="${raw_value#"$$"}"
+    if [[ -v "${var_name}" ]]; then
+      local result="${!var_name}"
+      if [[ "$require_non_empty" == true && -z "$result" ]]; then
+        log_error "Environment variable '${var_name}' referenced by ${param_name} is empty but must have a value"
+        exit 1
+      fi
+      echo "$result"
+    else
+      if [[ "$require_set" == true ]]; then
+        log_error "Environment variable '${var_name}' referenced by ${param_name} is not set"
+        exit 1
+      fi
+      log_debug "Environment variable '${var_name}' referenced by ${param_name} is not set, using empty value"
+      echo ""
+    fi
+    ;;
+  *)
+    echo "${raw_value}"
+    ;;
+  esac
 }
