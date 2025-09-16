@@ -17,7 +17,6 @@ result=()
 # shellcheck source=lib/modules/example.bash
 # . "$DIR/../lib/modules/example.bash"
 
-
 # Usage: validate_timeout (ensures timeout is within acceptable range)
 validate_timeout() {
   local timeout_option
