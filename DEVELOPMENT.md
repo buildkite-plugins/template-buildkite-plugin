@@ -14,14 +14,19 @@ For plugins with <100 lines of logic:
 
 ### When to use modular structure
 
-Consider modules when having:
+Consider **modules** (shared functionality in `lib/modules/`) when having:
 
 - **Complex shared logic** across multiple hooks
 - **Distinct feature areas** (auth, deploy, notify)
-- **Provider-specific logic** (AWS vs GCP vs Azure implementations)
 - **>200 lines** of logic in a single file
 
-For provider-specific handling, create separate modules like `lib/modules/aws.bash`, `lib/modules/gcp.bash`, etc.
+Consider **providers** (cloud-specific implementations in `lib/providers/`) when having:
+
+- **Multiple cloud providers** (AWS vs GCP vs Azure implementations)
+- **Different backends** with unique authentication/configuration
+- **Provider-specific logic** that doesn't apply to other implementations
+
+For provider-specific handling, create separate modules like `lib/providers/aws.bash`, `lib/providers/gcp.bash`, etc.
 
 ## Hook pattern usage
 
@@ -33,13 +38,7 @@ For provider-specific handling, create separate modules like `lib/modules/aws.ba
 - Authentication setup that persists across multiple hooks
 - Setting up environment variables shared between pre-command, command, and post-command hooks
 
-**Note**: Most plugins don't need an environment hook. Use `hooks/command` for simple validation and execution.
-
-```bash
-# Example: Early validation prevents later failures
-validate_required_config "API token" "${api_token}"
-export PLUGIN_API_TOKEN="${api_token}"
-```
+**Note**: Most plugins shouldn't need an environment hook only to perform validations and its logic should be kept inside the hook that contains the actual functionality.
 
 ### Command hook (`hooks/command`)
 
@@ -172,7 +171,7 @@ docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id your-plugi
 **ShellCheck** - Static analysis for shell scripts:
 
 ```bash
-shellcheck hooks/* tests/* lib/*.bash
+shellcheck hooks/* tests/* lib/*.bash lib/modules/* lib/providers/*
 ```
 
 ### Unit testing with BATS
@@ -210,24 +209,42 @@ tests/
 
 ## Performance considerations
 
-### Avoid expensive operations in environment hook
+### Avoid expensive operations in early hooks
 
 ```bash
 # Bad - slow network call in environment hook
 validate_api_connectivity "${api_url}"
 
-# Good - defer to command hook
+# Good - defer expensive operations to command hook
 export PLUGIN_API_URL="${api_url}"
 ```
 
 ### Cache expensive lookups
 
+Instead of doing:
 ```bash
-# Cache account ID lookup
-if [[ -z "${CACHED_ACCOUNT_ID:-}" ]]; then
-  CACHED_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-  export CACHED_ACCOUNT_ID
-fi
+get_account_id() {
+  aws sts get-caller-identity --query Account --output text
+}
+
+# somewhere else
+ACCOUNT_ID="$(get_account_id)"
+```
+
+Cache the result of the call:
+```bash
+get_account_id() {
+  # Cache account ID lookup
+  if [[ -z "${CACHED_ACCOUNT_ID:-}" ]]; then
+    CACHED_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+    export CACHED_ACCOUNT_ID
+  fi
+
+  echo "$CACHED_ACCOUNT_ID"
+}
+
+# somewhere else
+ACCOUNT_ID="$(get_account_id)"
 ```
 
 ## Security considerations
@@ -244,14 +261,27 @@ fi
 
 ### Use secure secret handling
 
+Do not reference secrets directly in options or in the pipeline or with special names.
+
+The following pipeline will get `SECRET_API_TOKEN` interpolated in the step that does the pipeline upload and not correctly redacted afterwards (without modifying the agent's configuration):
+
 ```yaml
-# In pipeline - use secrets plugin with $$VARIABLE references
 plugins:
-  - secrets#v1.0.0:
-      variables:
-        SECRET_API_TOKEN: SECRET_API_TOKEN
   - myplugin#v1.0.0:
-      api-token: $$SECRET_API_TOKEN
+      my-secret-variable: $SECRET_API_TOKEN
+```
+
+Instead, take an environment variable **name** and take advantage of bash's dereference functionality:
+
+```yaml
+plugins:
+  - myplugin#v1.0.0:
+      secret-variable-name: MY_VARIABLE
+```
+
+And in the code:
+```bash
+SECRET_TOKEN="${!MY_VARIABLE}"
 ```
 
 ## Debugging support
