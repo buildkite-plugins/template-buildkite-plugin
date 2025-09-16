@@ -36,9 +36,10 @@ Each module should:
 lib/
 ├── shared.bash              # Common utilities used everywhere
 ├── plugin.bash              # Configuration helpers
-└── modules/                 # Feature modules
-    ├── auth.bash           # Authentication handling
-    ├── deploy.bash         # Deployment logic
+├── modules/                 # Feature modules
+│   ├── auth.bash           # Authentication handling
+│   └── deploy.bash         # Deployment logic
+└── providers/               # Provider-specific implementations (optional)
     ├── aws.bash            # AWS-specific logic
     └── gcp.bash            # Google Cloud logic
 ```
@@ -47,11 +48,13 @@ lib/
 
 ```bash
 # In your hook script
+# Load feature modules
 # shellcheck source=lib/modules/auth.bash
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/modules/auth.bash"
 
-# shellcheck source=lib/modules/aws.bash
-source "$(dirname "${BASH_SOURCE[0]}")/../lib/modules/aws.bash"
+# Load provider-specific modules
+# shellcheck source=lib/providers/aws.bash
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/providers/aws.bash"
 
 # Use functions
 setup_auth_environment

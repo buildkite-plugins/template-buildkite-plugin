@@ -66,10 +66,7 @@ main() {
 
   # Handle numbers array
   if plugin_read_list_into_result NUMBERS; then
-    local numbers_list
-    numbers_list=$(printf '%s, ' "${result[@]}")
-    numbers_list=${numbers_list%, }
-    log_info "numbers: ${numbers_list}"
+    log_info "numbers: ${result[*]}"
   fi
 
   # Handle enabled boolean
