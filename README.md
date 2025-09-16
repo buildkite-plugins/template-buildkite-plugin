@@ -2,6 +2,24 @@
 
 A Buildkite plugin for something awesome
 
+## Getting started
+
+1. **Update plugin name**: Change `YOUR_PLUGIN_NAME` in `lib/plugin.bash`
+2. **Customize configuration**: Modify `plugin.yml` for your options
+3. **Add your logic**: Implement features in `hooks/command`
+4. **Use modules**: For complex plugins, add modules in `lib/modules/`
+5. **Test thoroughly**: Add tests in `tests/` directory
+
+## Architecture
+
+- **`hooks/command`**: Main execution logic
+- **`lib/shared.bash`**: Common utilities and logging
+- **`lib/plugin.bash`**: Configuration reading helpers
+- **`lib/modules/`**: Optional feature modules for complex plugins
+- **`hooks/environment`**: Optional early setup (for complex plugins only)
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development guidelines.
+
 ## Options
 
 These are all the options available to configure this plugin's behaviour.
@@ -46,23 +64,6 @@ Whether to use SSL/TLS for the connection. Defaults to `true`.
 
 Timeout value in seconds. Must be between 1 and 60 seconds.
 
-## Architecture
-
-- **`hooks/command`**: Main execution logic
-- **`lib/shared.bash`**: Common utilities and logging
-- **`lib/plugin.bash`**: Configuration reading helpers
-- **`lib/modules/`**: Optional feature modules for complex plugins
-- **`hooks/environment`**: Optional early setup (for complex plugins only)
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development guidelines.
-
-## Getting started
-
-1. **Update plugin name**: Change `YOUR_PLUGIN_NAME` in `lib/plugin.bash`
-2. **Customize configuration**: Modify `plugin.yml` for your options
-3. **Add your logic**: Implement features in `hooks/command`
-4. **Use modules**: For complex plugins, add modules in `lib/modules/`
-5. **Test thoroughly**: Add tests in `tests/` directory
 
 ## Examples
 
@@ -141,20 +142,21 @@ steps:
 
 ### Secrets and environment variables
 
-Secure handling of secrets using the secrets plugin:
+Secure handling of secrets by passing environment variable names:
 
 ```yaml
 steps:
   - label: "🔨 Using secrets"
     command: "echo authenticated processing"
     plugins:
-      - secrets#v1.0.0:
-          variables:
-            API_TOKEN: API_TOKEN
       - template#v1.0.0:
-          mandatory: $$API_TOKEN
-          timeout: 30
+          mandatory: "required-value"
+          secret-var-name: "MY_SECRET_TOKEN"  # Pass the env var name, not the value
+    env:
+      MY_SECRET_TOKEN: "secret-value-here"
 ```
+
+In the plugin code, use `${!var_name}` to get the secret value from the environment variable name.
 
 ### Debug mode
 
@@ -186,7 +188,7 @@ steps:
 1. Follow the patterns established in this template
 2. Add tests for new functionality
 3. Update documentation for any new options
-4. Ensure shellcheck passes (fix issues, don't just disable checks)
+4. Ensure shellcheck passes (fix issues, don't just disable checks - disabling should be done very seldomly and with team documentation/agreement)
 5. Test with the plugin tester
 
 ## Developing
@@ -207,7 +209,7 @@ docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id your-plugi
 **Run shellcheck:**
 
 ```bash
-shellcheck hooks/* tests/* lib/*.bash
+shellcheck hooks/* tests/* lib/*.bash lib/modules/* lib/providers/*
 ```
 
 ## 📜 License
