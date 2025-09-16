@@ -143,14 +143,3 @@ setup() {
   assert_output --partial 'enabled: false'
 }
 
-@test "Numbers array with non-numeric element fails" {
-  export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_NUMBERS_0='1'
-  export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_NUMBERS_1='abc'
-  export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_NUMBERS_2='3'
-
-  run "$PWD"/hooks/command
-
-  assert_failure 1
-  assert_output --partial 'numbers array contains non-numeric value: abc'
-  refute_output --partial 'Running plugin with options'
-}

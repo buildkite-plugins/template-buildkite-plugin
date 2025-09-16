@@ -17,17 +17,6 @@ result=()
 # shellcheck source=lib/modules/example.bash
 # . "$DIR/../lib/modules/example.bash"
 
-# Usage: validate_numbers_array (validates numbers from plugin config)
-validate_numbers_array() {
-  if plugin_read_list_into_result NUMBERS; then
-    for number in "${result[@]}"; do
-      if ! [[ "$number" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
-        log_error "numbers array contains non-numeric value: $number"
-        exit 1
-      fi
-    done
-  fi
-}
 
 # Usage: validate_timeout (ensures timeout is within acceptable range)
 validate_timeout() {
@@ -55,7 +44,6 @@ main() {
   optional_option=$(plugin_read_config OPTIONAL "default")
 
   # Validate configuration
-  validate_numbers_array
   validate_timeout
 
   echo "--- :hammer: Running plugin"
