@@ -149,13 +149,13 @@ string_contains() {
 # Removes prefix from string
 # Usage: result=$(string_strip_prefix "foo=bar" "foo=")  # Returns: "bar"
 string_strip_prefix() {
-  echo "${1#$2}"
+  echo "${1#"$2"}"
 }
 
 # Removes suffix from string
 # Usage: result=$(string_strip_suffix "foo=bar" "=bar")  # Returns: "foo"
 string_strip_suffix() {
-  echo "${1%$2}"
+  echo "${1%"$2"}"
 }
 
 # ============================================================================

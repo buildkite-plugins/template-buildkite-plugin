@@ -66,7 +66,9 @@ main() {
 
   # Handle numbers array
   if plugin_read_list_into_result NUMBERS; then
-    log_info "numbers: ${result[*]}"
+    local numbers_display
+    numbers_display=$(array_join ", " "${result[@]}")
+    log_info "numbers: ${numbers_display}"
   fi
 
   # Handle enabled boolean

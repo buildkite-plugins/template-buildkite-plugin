@@ -142,7 +142,7 @@ steps:
 
 ### Secrets and environment variables
 
-Secure handling of secrets by passing environment variable names:
+Secure handling of secrets using environment variables:
 
 ```yaml
 steps:
@@ -151,12 +151,12 @@ steps:
     plugins:
       - template#v1.0.0:
           mandatory: "required-value"
-          secret-var-name: "MY_SECRET_TOKEN"  # Pass the env var name, not the value
+          optional: "MY_SECRET_TOKEN"  # Pass env var name instead of secret value
     env:
       MY_SECRET_TOKEN: "secret-value-here"
 ```
 
-In the plugin code, use `${!var_name}` to get the secret value from the environment variable name.
+In the plugin code, use `${!config_value}` to get the secret value from the environment variable name.
 
 ### Debug mode
 
