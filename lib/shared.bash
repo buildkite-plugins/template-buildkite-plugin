@@ -97,3 +97,79 @@ enable_debug_if_requested() {
   fi
 }
 
+# ============================================================================
+# Array utilities
+# ============================================================================
+
+# Checks if an array contains a specific value
+# Usage: if array_contains "needle" "${haystack[@]}"; then echo "found"; fi
+array_contains() {
+  local needle="$1"
+  shift
+
+  local item
+  for item in "$@"; do
+    [[ "$item" == "$needle" ]] && return 0
+  done
+
+  return 1
+}
+
+# Joins array elements into a string with separator
+# Usage: result=$(array_join "," "${array[@]}")  # Returns: "a,b,c"
+array_join() {
+  local separator="$1"
+  shift
+
+  local output=""
+  local first=true
+
+  for item in "$@"; do
+    if [[ "$first" == true ]]; then
+      output="$item"
+      first=false
+    else
+      output="${output}${separator}${item}"
+    fi
+  done
+
+  echo "$output"
+}
+
+# ============================================================================
+# String utilities
+# ============================================================================
+
+# Checks if a string contains another string
+# Usage: if string_contains "$haystack" "$needle"; then echo "found"; fi
+string_contains() {
+  [[ "$1" == *"$2"* ]]
+}
+
+# Removes prefix from string
+# Usage: result=$(string_strip_prefix "foo=bar" "foo=")  # Returns: "bar"
+string_strip_prefix() {
+  echo "${1#$2}"
+}
+
+# Removes suffix from string
+# Usage: result=$(string_strip_suffix "foo=bar" "=bar")  # Returns: "foo"
+string_strip_suffix() {
+  echo "${1%$2}"
+}
+
+# ============================================================================
+# File utilities
+# ============================================================================
+
+# Checks if file exists and is a regular file
+# Usage: if file_exists "/path/to/file"; then echo "exists"; fi
+file_exists() {
+  [[ -f "$1" ]]
+}
+
+# Checks if file contains specific text/pattern
+# Usage: if file_contains_text "pattern" "/path/to/file"; then echo "found"; fi
+file_contains_text() {
+  grep -q "$1" "$2"
+}
