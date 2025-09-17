@@ -149,11 +149,11 @@ steps:
   - label: "🔨 Using secrets"
     command: "echo authenticated processing"
     plugins:
+      - secrets#v1.0.0:
+          MY_SECRET_TOKEN: secret_key_in_buildkite_secrets
       - template#v1.0.0:
           mandatory: "required-value"
           optional: "MY_SECRET_TOKEN"  # Pass env var name instead of secret value
-    env:
-      MY_SECRET_TOKEN: "secret-value-here"
 ```
 
 In the plugin code, use `${!config_value}` to get the secret value from the environment variable name.
