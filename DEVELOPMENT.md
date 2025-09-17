@@ -281,7 +281,8 @@ plugins:
 
 And in the code:
 ```bash
-SECRET_TOKEN="${!MY_VARIABLE}"
+SECRET_VARIABLE_NAME="$(plugin_read_config secret-variable-name)"
+SECRET_TOKEN="${!SECRET_VARIABLE_NAME}"
 ```
 
 ## Debugging support
