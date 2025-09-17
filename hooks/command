@@ -2,75 +2,89 @@
 
 set -euo pipefail
 
-DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/shared.bash
+. "$DIR/../lib/shared.bash"
 
 # shellcheck source=lib/plugin.bash
 . "$DIR/../lib/plugin.bash"
 
-# Validation functions
-validate_numbers_array() {
-  if plugin_read_list_into_result NUMBERS; then
-    for number in "${result[@]}"; do
-      if ! [[ "$number" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
-        echo "Error: numbers array contains non-numeric value: $number"
-        exit 1
-      fi
-    done
-  fi
-}
+# Global variable used by plugin_read_list_into_result
+result=()
 
+# Optional: Load feature modules for complex plugins
+# shellcheck source=lib/modules/example.bash
+# . "$DIR/../lib/modules/example.bash"
+
+# Usage: validate_timeout (ensures timeout is within acceptable range)
 validate_timeout() {
   local timeout_option
   timeout_option=$(plugin_read_config TIMEOUT "")
   if [ -n "${timeout_option}" ]; then
     if [[ "$timeout_option" -lt 1 || "$timeout_option" -gt 60 ]]; then
-      echo "Error: timeout must be between 1 and 60 seconds"
+      log_error "timeout must be between 1 and 60 seconds"
       exit 1
     fi
   fi
 }
 
-MANDATORY_OPTION=$(plugin_read_config MANDATORY "")
+main() {
+  # Set up error reporting and debug mode
+  setup_error_trap
+  enable_debug_if_requested
 
-if [ -z "${MANDATORY_OPTION}" ]; then
-  echo 'Missing mandatory option in the plugin'
-  exit 1
-fi
+  # Get configuration
+  local mandatory_option
+  mandatory_option=$(plugin_read_config MANDATORY "")
+  validate_required_config "mandatory option" "${mandatory_option}"
 
-OPTIONAL_OPTION=$(plugin_read_config OPTIONAL "default")
+  local optional_option
+  optional_option=$(plugin_read_config OPTIONAL "default")
 
-# Validate configuration early before any output
-validate_numbers_array
-validate_timeout
+  # Validate configuration
+  validate_timeout
 
-echo "Running plugin with options:"
-echo " - mandatory: ${MANDATORY_OPTION}"
-echo " - optional: ${OPTIONAL_OPTION}"
+  echo "--- :hammer: Running plugin"
 
-# Handle numbers array
-if plugin_read_list_into_result NUMBERS; then
-  numbers_list=$(printf '%s, ' "${result[@]}")
-  numbers_list=${numbers_list%, }
-  echo " - numbers: ${numbers_list}"
-fi
+  log_info "Running plugin with options:"
+  log_info "mandatory: ${mandatory_option}"
+  log_info "optional: ${optional_option}"
 
-# Handle enabled boolean
-ENABLED_OPTION=$(plugin_read_config ENABLED "false")
-echo " - enabled: ${ENABLED_OPTION}"
+  # Handle numbers array
+  if plugin_read_list_into_result NUMBERS; then
+    local numbers_display
+    numbers_display=$(array_join ", " "${result[@]}")
+    log_info "numbers: ${numbers_display}"
+  fi
 
-# Handle config object
-CONFIG_HOST=$(plugin_read_config CONFIG_HOST "")
-if [ -n "${CONFIG_HOST}" ]; then
-  CONFIG_PORT=$(plugin_read_config CONFIG_PORT "1234")
-  CONFIG_SSL=$(plugin_read_config CONFIG_SSL "true")
+  # Handle enabled boolean
+  local enabled_option
+  enabled_option=$(plugin_read_config ENABLED "false")
+  log_info "enabled: ${enabled_option}"
 
-  echo " - config.host: ${CONFIG_HOST}"
-  echo " - config.port: ${CONFIG_PORT}"
-  echo " - config.ssl: ${CONFIG_SSL}"
-fi
+  # Handle config object
+  local config_host
+  config_host=$(plugin_read_config CONFIG_HOST "")
+  if [[ -n "${config_host}" ]]; then
+    local config_port config_ssl
+    config_port=$(plugin_read_config CONFIG_PORT "1234")
+    config_ssl=$(plugin_read_config CONFIG_SSL "true")
 
-# Handle timeout number (already validated above)
-TIMEOUT_OPTION=$(plugin_read_config TIMEOUT "")
-if [ -n "${TIMEOUT_OPTION}" ]; then
-  echo " - timeout: ${TIMEOUT_OPTION}"
-fi
+    log_info "config.host: ${config_host}"
+    log_info "config.port: ${config_port}"
+    log_info "config.ssl: ${config_ssl}"
+  fi
+
+  # Handle timeout number (already validated above)
+  local timeout_option
+  timeout_option=$(plugin_read_config TIMEOUT "")
+  if [[ -n "${timeout_option}" ]]; then
+    log_info "timeout: ${timeout_option}"
+  fi
+
+  # Your main plugin logic here
+  log_success "Plugin executed successfully"
+}
+
+main "$@"

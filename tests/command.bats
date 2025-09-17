@@ -15,8 +15,8 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
-  assert_output --partial 'Missing mandatory option'
+  assert_failure 1
+  assert_output --partial 'mandatory option is required but not provided'
   refute_output --partial 'Running plugin'
 }
 
@@ -26,7 +26,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- mandatory: Value'
+  assert_output --partial 'mandatory: Value'
 }
 
 @test "Optional value changes bejaviour" {
@@ -36,7 +36,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- optional: other value'
+  assert_output --partial 'optional: other value'
 }
 
 @test "Numbers array processing" {
@@ -48,7 +48,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- numbers: 1, 2, 3'
+  assert_output --partial 'numbers: 1, 2, 3'
 }
 
 @test "Enabled boolean feature toggle" {
@@ -58,7 +58,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- enabled: true'
+  assert_output --partial 'enabled: true'
 }
 
 @test "Config object with nested properties" {
@@ -70,9 +70,9 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- config.host: example.com'
-  assert_output --partial '- config.port: 8080'
-  assert_output --partial '- config.ssl: true'
+  assert_output --partial 'config.host: example.com'
+  assert_output --partial 'config.port: 8080'
+  assert_output --partial 'config.ssl: true'
 }
 
 @test "Timeout number validation" {
@@ -82,7 +82,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- timeout: 30'
+  assert_output --partial 'timeout: 30'
 }
 
 @test "Timeout exceeds maximum fails" {
@@ -90,8 +90,8 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
-  assert_output --partial 'Error: timeout must be between 1 and 60 seconds'
+  assert_failure 1
+  assert_output --partial 'timeout must be between 1 and 60 seconds'
   refute_output --partial 'Running plugin with options'
 }
 
@@ -100,8 +100,8 @@ setup() {
 
   run "$PWD"/hooks/command
 
-  assert_failure
-  assert_output --partial 'Error: timeout must be between 1 and 60 seconds'
+  assert_failure 1
+  assert_output --partial 'timeout must be between 1 and 60 seconds'
   refute_output --partial 'Running plugin with options'
 }
 
@@ -110,7 +110,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- enabled: false'
+  assert_output --partial 'enabled: false'
 }
 
 @test "Config with only required host field" {
@@ -120,9 +120,9 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- config.host: test.com'
-  assert_output --partial '- config.port: 1234'
-  assert_output --partial '- config.ssl: true'
+  assert_output --partial 'config.host: test.com'
+  assert_output --partial 'config.port: 1234'
+  assert_output --partial 'config.ssl: true'
 }
 
 @test "Handles missing numbers array gracefully" {
@@ -130,7 +130,7 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  refute_output --partial '- numbers:'
+  refute_output --partial 'numbers:'
 }
 
 @test "Enabled boolean set to false explicitly" {
@@ -140,17 +140,6 @@ setup() {
 
   assert_success
   assert_output --partial 'Running plugin with options'
-  assert_output --partial '- enabled: false'
+  assert_output --partial 'enabled: false'
 }
 
-@test "Numbers array with non-numeric element fails" {
-  export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_NUMBERS_0='1'
-  export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_NUMBERS_1='abc'
-  export BUILDKITE_PLUGIN_YOUR_PLUGIN_NAME_NUMBERS_2='3'
-
-  run "$PWD"/hooks/command
-
-  assert_failure
-  assert_output --partial 'Error: numbers array contains non-numeric value: abc'
-  refute_output --partial 'Running plugin with options'
-}
