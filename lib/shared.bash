@@ -120,7 +120,7 @@ array_contains() {
 array_join() {
   local separator="${1}" f=${2-}
   if shift 2; then
-    printf %s "$f" "${@/#/$d}"
+    printf %s "$f" "${@/#/$separator}"
   fi
 }
 
