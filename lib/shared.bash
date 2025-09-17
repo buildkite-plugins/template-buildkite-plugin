@@ -118,22 +118,10 @@ array_contains() {
 # Joins array elements into a string with separator
 # Usage: result=$(array_join "," "${array[@]}")  # Returns: "a,b,c"
 array_join() {
-  local separator="$1"
-  shift
-
-  local output=""
-  local first=true
-
-  for item in "$@"; do
-    if [[ "$first" == true ]]; then
-      output="$item"
-      first=false
-    else
-      output="${output}${separator}${item}"
-    fi
-  done
-
-  echo "$output"
+  local separator="${1}" f=${2-}
+  if shift 2; then
+    printf %s "$f" "${@/#/$d}"
+  fi
 }
 
 # ============================================================================
