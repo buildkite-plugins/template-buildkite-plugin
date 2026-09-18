@@ -69,3 +69,27 @@ function plugin_read_config() {
   local default="${2:-}"
   echo "${!var:-$default}"
 }
+
+# Usage: prefix_read_env "BUILDKITE_PLUGIN_MYPLUGIN_SECRET_VARIABLE_NAME" "default"
+# Reads a plugin config value that holds the NAME of an environment variable,
+# then dereferences it and returns that environment variable's value.
+function prefix_read_env() {
+  local var="$1"
+  local default="${2:-}"
+  local env_var_name="${!var:-}"
+
+  if [ -z "${env_var_name}" ]; then
+    echo "${default}"
+    return
+  fi
+
+  echo "${!env_var_name:-$default}"
+}
+
+# Usage: token=$(plugin_read_env SECRET_VARIABLE_NAME)
+# Reads a plugin option whose value is the name of an environment variable
+# (e.g. `secret-variable-name: MY_VARIABLE`) and returns that variable's value,
+# instead of the name itself as plugin_read_config would.
+function plugin_read_env() {
+  prefix_read_env "BUILDKITE_PLUGIN_${PLUGIN_PREFIX}_${1}" "${2:-}"
+}
