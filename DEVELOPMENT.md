@@ -279,10 +279,9 @@ plugins:
       secret-variable-name: MY_VARIABLE
 ```
 
-And in the code:
+And in the code, use `plugin_read_env` to dereference it in one step:
 ```bash
-SECRET_VARIABLE_NAME="$(plugin_read_config secret-variable-name)"
-SECRET_TOKEN="${!SECRET_VARIABLE_NAME}"
+SECRET_TOKEN="$(plugin_read_env SECRET_VARIABLE_NAME)"
 ```
 
 ## Debugging support
