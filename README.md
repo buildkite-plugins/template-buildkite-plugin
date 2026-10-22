@@ -156,7 +156,7 @@ steps:
           optional: "MY_SECRET_TOKEN"  # Pass env var name instead of secret value
 ```
 
-In the plugin code, use `${!config_value}` to get the secret value from the environment variable name.
+In the plugin code, use `plugin_read_env OPTIONAL` (instead of `plugin_read_config`) to get the secret value from the environment variable name.
 
 ### Debug mode
 
